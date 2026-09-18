@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { ReaderControls } from '@/components/reader-controls'
 import { cn } from '@/lib/cn'
+import { site } from '@/site'
 
 type LayoutProps = {
   children: ReactNode
@@ -23,18 +24,20 @@ export const Layout = ({ children, bionic, onToggleBionic }: LayoutProps) => (
           to="/"
           className="mr-0.5 cursor-pointer whitespace-nowrap text-[14px] font-semibold tracking-tight text-[var(--text)] sm:mr-1 sm:text-[15px]"
         >
-          Learning<span className="text-[var(--primary)]">Docs</span>
+          {site.name}
+          <span className="text-[var(--primary)]">{site.nameAccent}</span>
         </Link>
         <nav className="flex items-center gap-0.5">
           <NavLink to="/docs" className={navClass}>
             Docs
           </NavLink>
-          <NavLink to="/blog" className={navClass}>
-            Blog
-          </NavLink>
+          {site.showBlog && (
+            <NavLink to="/blog" className={navClass}>
+              Blog
+            </NavLink>
+          )}
           <NavLink to="/how-it-works" className={navClass}>
-            <span className="sm:hidden">Skill</span>
-            <span className="hidden sm:inline">How it works</span>
+            {site.aboutLabel}
           </NavLink>
         </nav>
         <div className="ml-auto shrink-0">
@@ -46,7 +49,7 @@ export const Layout = ({ children, bionic, onToggleBionic }: LayoutProps) => (
     <main className="mx-auto max-w-6xl px-4 pb-24 pt-8">{children}</main>
 
     <footer className="border-t border-[var(--border)] py-8 text-center text-[13px] text-[var(--text-muted)]">
-      Built with the{' '}
+      {site.footer} Built with the{' '}
       <a
         className="cursor-pointer text-[var(--primary)]"
         href="https://github.com/ninawekunal/learning-doc-builder"

@@ -37,7 +37,11 @@ const build = (
       return { kind, slug, meta, body: extracted.body, quiz: extracted.quiz }
     })
     .filter((entry) => !entry.meta.draft)
-    .sort((a, b) => b.meta.date.localeCompare(a.meta.date))
+    .sort((a, b) =>
+      a.meta.part !== undefined && b.meta.part !== undefined
+        ? a.meta.part - b.meta.part
+        : b.meta.date.localeCompare(a.meta.date),
+    )
 
 export const docs = build(docFiles, 'doc')
 export const posts = build(blogFiles, 'blog')

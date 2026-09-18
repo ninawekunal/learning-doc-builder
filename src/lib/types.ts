@@ -15,6 +15,8 @@ export type Frontmatter = {
   date: string
   tags: string[]
   minutes?: number
+  /** Series position; docs with a part sort by it ascending. */
+  part?: number
   draft?: boolean
 }
 
