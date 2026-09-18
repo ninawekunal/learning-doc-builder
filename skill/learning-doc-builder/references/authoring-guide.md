@@ -47,6 +47,12 @@ content/docs/<slug>/
 
 Link everything relatively: `![alt](./images/row-pipeline.png "Caption.")`, `[the data](./invoices.json)`.
 
+## Unlisted docs
+
+Add `unlisted: true` to keep a doc off every list: the home page, the docs list, tags, and other docs' series menus.
+It is still reachable by its URL, and it asks search engines not to index it.
+Use it for anything company-specific, because listed docs must never name a company.
+
 ## Front matter
 
 ```yaml
@@ -118,6 +124,7 @@ At most once per doc: one `> [!GOTCHA]` (the trap that costs hours) and one `> [
 Boxes that carry the main thread start open: TLDR, ANALOGY, STEPS, GOTCHA, THINK, RECAP, SUMMARY.
 Boxes that carry depth start closed: NUANCE, INTERVIEW, WIN.
 Override either way with a suffix: `> [!STEPS]-` starts closed, `> [!NUANCE]+` starts open.
+Give a box its own label by writing it after the marker: `> [!NUANCE]- Worked answer: autocomplete`.
 Rule of thumb: if the reader can skip it and still follow the next section, close it.
 
 ## Summary

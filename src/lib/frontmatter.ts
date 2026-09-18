@@ -45,6 +45,7 @@ export const parseFrontmatter = (source: string): { meta: Frontmatter; body: str
     tags: Array.isArray(fields.tags) ? (fields.tags as string[]) : [],
     minutes: typeof fields.minutes === 'number' ? fields.minutes : undefined,
     draft: fields.draft === true,
+    unlisted: fields.unlisted === true,
     part: typeof fields.part === 'number' ? fields.part : undefined,
     series: typeof fields.series === 'string' ? fields.series : undefined,
   }

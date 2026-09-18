@@ -26,7 +26,7 @@ export type TermToken = { type: 'term'; raw: string; text: string; term: Glossar
 
 export type Block =
   | { kind: 'md'; token: Token }
-  | { kind: 'callout'; type: CalloutType; collapsed: boolean; blocks: Block[] }
+  | { kind: 'callout'; type: CalloutType; collapsed: boolean; title?: string; blocks: Block[] }
   | ({ kind: 'code' } & CodeSpec)
   | { kind: 'tabs'; group: string; items: CodeSpec[] }
   | { kind: 'table'; token: Tokens.Table; caption: string | null }

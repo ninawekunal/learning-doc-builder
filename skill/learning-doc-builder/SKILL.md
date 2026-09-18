@@ -80,6 +80,7 @@ If something is unverified, write "unverified" in the doc.
 - Images and downloads live in the doc folder and are linked relatively: `./images/x.png`.
 - The quiz and the related links render together as the page's last stop, "Practice and explore", with its own entry in the section nav. Do not write that section yourself.
 - The quiz block, then the related block, are the last things in the file, and both parse as JSON.
+- **Listed docs never name a company** as an interviewer or source, and never use company-specific URLs. Company-specific prep goes in a doc with `unlisted: true`: reachable by URL only, never listed, tagged or linked. The checker enforces both.
 - No em dashes anywhere. Use a plain hyphen or a colon.
 
 ## Reference files

@@ -110,7 +110,8 @@ Table: each row is a header and what it tells the browser.
 Save it as `content/docs/<slug>/index.md`: every doc is its own folder, with its images and downloads beside it.
 An article has at most 5 sections before the Summary; a bigger topic becomes a series, and the series name above the title opens a list of every part.
 Every section ends with a **Remember** box, and the doc ends with a **Summary** section.
-The checker fails a doc that breaks any of these.
+Add `unlisted: true` to share a doc by link only: it never appears in lists, tags or menus.
+The checker fails a doc that breaks any of these, and any listed doc that names a company.
 
 > [!RECAP]
 > - One folder per doc, at most 5 sections, bigger topics become a series.

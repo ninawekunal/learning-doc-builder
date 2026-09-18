@@ -101,6 +101,11 @@ const checkQuiz = (file, source, isDoc) => {
 }
 
 const MAX_SECTIONS = 5
+
+// Listed docs stay company-neutral: no interviewer or employer names, no company-specific links.
+const COMPANY_NAMES = ['Ramp', 'OpenCFO', 'Sundberg']
+const unlistedSlugs = new Set()
+const listedBodies = []
 const RELATED_KINDS = ['practice', 'read', 'watch']
 
 const isProseLine = (line) => {
@@ -259,6 +264,16 @@ for (const dir of DIRS) {
 
     if (source.includes('\u2014')) fail(file, 'contains an em dash')
 
+    if (dir === 'content/docs' && meta.unlisted === 'true') unlistedSlugs.add(slug)
+    if (meta.unlisted !== 'true') {
+      for (const name of COMPANY_NAMES) {
+        if (new RegExp(`\\b${name}\\b|/${name.toLowerCase()}/`, 'i').test(body)) {
+          fail(file, `mentions "${name}"; listed docs must not name a company (mark it unlisted: true or genericize)`)
+        }
+      }
+      listedBodies.push({ file, body })
+    }
+
     if (dir === 'content/docs') {
       checkReadability(file, body)
       checkAssets(file, body)
@@ -266,6 +281,12 @@ for (const dir of DIRS) {
     }
 
     checkQuiz(file, source, dir === 'content/docs')
+  }
+}
+
+for (const { file, body } of listedBodies) {
+  for (const m of body.matchAll(/#\/docs\/([\w-]+)/g)) {
+    if (unlistedSlugs.has(m[1])) fail(file, `links to unlisted doc "${m[1]}"; unlisted docs are URL-only`)
   }
 }
 

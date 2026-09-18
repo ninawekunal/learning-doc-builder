@@ -22,6 +22,8 @@ export type Frontmatter = {
   /** Series name; docs sharing it get previous / next links. */
   series?: string
   draft?: boolean
+  /** Reachable by URL only: never listed, linked, tagged or shown in series navigation. */
+  unlisted?: boolean
 }
 
 export type Heading = { id: string; text: string; level: 2 | 3; optional?: boolean }

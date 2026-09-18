@@ -47,7 +47,7 @@ const Article = ({ entry, bionic }: { entry: ContentEntry; bionic: boolean }) =>
   const active = useActiveHeading(headings)
   const context = useMemo(() => ({ bionic }), [bionic])
 
-  useDocTitle(entry.meta.title)
+  useDocTitle(entry.meta.title, entry.meta.unlisted === true)
 
   return (
     <DocContext.Provider value={context}>
@@ -86,7 +86,7 @@ const Article = ({ entry, bionic }: { entry: ContentEntry; bionic: boolean }) =>
 
           <PracticeSection title={entry.meta.title} quiz={entry.quiz} related={entry.related} bionic={bionic} />
 
-          <SeriesNav slug={entry.slug} />
+          <SeriesNav entry={entry} />
         </div>
 
         <TocSidebar headings={headings} active={active} />

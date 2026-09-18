@@ -1,17 +1,14 @@
 import { Link } from 'react-router-dom'
 import { Card, CardMeta } from '@/components/ui/card'
-import { docs } from '@/lib/content'
+import { seriesParts } from '@/lib/content'
+import type { ContentEntry } from '@/lib/types'
 
 /** Previous / next links between parts of the same series. */
-export const SeriesNav = ({ slug }: { slug: string }) => {
-  const current = docs.find((d) => d.slug === slug)
+export const SeriesNav = ({ entry }: { entry: ContentEntry }) => {
+  if (!entry.meta.series) return null
 
-  if (!current?.meta.series) return null
-
-  const parts = docs
-    .filter((d) => d.meta.series === current.meta.series)
-    .sort((a, b) => (a.meta.part ?? 0) - (b.meta.part ?? 0))
-  const index = parts.indexOf(current)
+  const parts = seriesParts(entry)
+  const index = parts.findIndex((p) => p.slug === entry.slug)
 
   const prev = parts[index - 1]
   const next = parts[index + 1]

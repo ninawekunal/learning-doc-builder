@@ -65,17 +65,22 @@ const build = (
     // Newest first; parts of one series published the same day stay in order.
     .sort((a, b) => b.meta.date.localeCompare(a.meta.date) || (a.meta.part ?? 0) - (b.meta.part ?? 0))
 
-export const docs = build(docFiles, 'doc')
-export const posts = build(blogFiles, 'blog')
+const allDocs = build(docFiles, 'doc')
+const allPosts = build(blogFiles, 'blog')
+
+/** Listed entries only; unlisted ones are found by findEntry and nothing else. */
+export const docs = allDocs.filter((e) => !e.meta.unlisted)
+export const posts = allPosts.filter((e) => !e.meta.unlisted)
 
 export const allTags = (entries: ContentEntry[]): string[] =>
   [...new Set(entries.flatMap((e) => e.meta.tags))].sort()
 
 export const findEntry = (kind: ContentKind, slug: string): ContentEntry | undefined =>
-  (kind === 'doc' ? docs : posts).find((e) => e.slug === slug)
+  (kind === 'doc' ? allDocs : allPosts).find((e) => e.slug === slug)
 
-/** Every doc in the same series as `entry`, in part order. */
+/** Every doc in the same series as `entry`, in part order; listed and unlisted docs never mix. */
 export const seriesParts = (entry: ContentEntry): ContentEntry[] =>
   entry.meta.series
-    ? docs.filter((d) => d.meta.series === entry.meta.series).sort((a, b) => (a.meta.part ?? 0) - (b.meta.part ?? 0))
+    ? allDocs
+        .filter((d) => d.meta.series === entry.meta.series && Boolean(d.meta.unlisted) === Boolean(entry.meta.unlisted)).sort((a, b) => (a.meta.part ?? 0) - (b.meta.part ?? 0))
     : []

@@ -35,10 +35,10 @@ export const CALLOUT_STYLES: Record<CalloutType, CalloutStyle> = {
   THINK: { label: 'Think before you peek', icon: Brain, tone: 'callout-think' },
 }
 
-type CalloutProps = { type: CalloutType; collapsed: boolean; children: ReactNode }
+type CalloutProps = { type: CalloutType; collapsed: boolean; title?: string; children: ReactNode }
 
 /** Every callout is a collapsible box with a coloured icon; depth boxes start closed. */
-export const Callout = ({ type, collapsed, children }: CalloutProps) => {
+export const Callout = ({ type, collapsed, title, children }: CalloutProps) => {
   const [open, setOpen] = useState(!collapsed)
   const style = CALLOUT_STYLES[type]
   const Icon = style.icon
@@ -49,7 +49,7 @@ export const Callout = ({ type, collapsed, children }: CalloutProps) => {
         <span className="callout-icon" aria-hidden>
           <Icon className="size-4" />
         </span>
-        <span className="callout-label">{style.label}</span>
+        <span className="callout-label">{title ?? style.label}</span>
         <ChevronDown className={cn('callout-chevron size-4', !open && '-rotate-90')} aria-hidden />
       </CollapsibleTrigger>
       <CollapsibleContent className="callout-body">{children}</CollapsibleContent>

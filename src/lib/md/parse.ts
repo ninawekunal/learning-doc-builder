@@ -34,10 +34,10 @@ export const slugify = (text: string): string =>
     .slice(0, 60)
 
 /** Lifts `> [!TYPE]` blocks out of the source, leaving a placeholder line. */
-const extractCallouts = (source: string): { source: string; bodies: { type: CalloutType; collapsed: boolean; body: string }[] } => {
+const extractCallouts = (source: string): { source: string; bodies: { type: CalloutType; collapsed: boolean; title?: string; body: string }[] } => {
   const lines = source.split(/\r?\n/)
   const out: string[] = []
-  const bodies: { type: CalloutType; collapsed: boolean; body: string }[] = []
+  const bodies: { type: CalloutType; collapsed: boolean; title?: string; body: string }[] = []
 
   let fence: string | null = null
 
@@ -50,7 +50,7 @@ const extractCallouts = (source: string): { source: string; bodies: { type: Call
       else if (fenceMark[1].startsWith(fence)) fence = null
     }
 
-    const open = fence === null ? lines[i].match(/^>\s*\[!([A-Z]+)\]([+-])?\s*$/) : null
+    const open = fence === null ? lines[i].match(/^>\s*\[!([A-Z]+)\]([+-])?(?:\s+(.+?))?\s*$/) : null
 
     if (!open || !CALLOUT_TYPES.includes(open[1] as CalloutType)) {
       out.push(lines[i])
@@ -68,7 +68,7 @@ const extractCallouts = (source: string): { source: string; bodies: { type: Call
     const type = open[1] as CalloutType
     const collapsed = open[2] === '-' || (open[2] !== '+' && COLLAPSED_BY_DEFAULT.has(type))
 
-    bodies.push({ type, collapsed, body: inner.join('\n') })
+    bodies.push({ type, collapsed, title: open[3], body: inner.join('\n') })
     out.push('', `<!--CALLOUT:${bodies.length - 1}-->`, '')
     i = j - 1
   }
@@ -99,7 +99,7 @@ const parseCodeInfo = (code: Tokens.Code): CodeSpec => {
   }
 }
 
-const toBlocks = (tokens: Token[], bodies: { type: CalloutType; collapsed: boolean; body: string }[]): Block[] => {
+const toBlocks = (tokens: Token[], bodies: { type: CalloutType; collapsed: boolean; title?: string; body: string }[]): Block[] => {
   const blocks: Block[] = []
 
   for (let i = 0; i < tokens.length; i += 1) {
@@ -117,6 +117,7 @@ const toBlocks = (tokens: Token[], bodies: { type: CalloutType; collapsed: boole
             kind: 'callout',
             type: found.type,
             collapsed: found.collapsed,
+            title: found.title,
             blocks: toBlocks(lex(found.body), bodies),
           })
         continue

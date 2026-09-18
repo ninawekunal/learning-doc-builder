@@ -70,7 +70,7 @@ export const Blocks = ({ blocks }: { blocks: Block[] }) => (
       switch (block.kind) {
         case 'callout':
           return (
-            <Callout key={i} type={block.type} collapsed={block.collapsed}>
+            <Callout key={i} type={block.type} collapsed={block.collapsed} title={block.title}>
               <Blocks blocks={block.blocks} />
             </Callout>
           )
