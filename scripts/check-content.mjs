@@ -3,7 +3,7 @@
  * Validates every content file before it ships: front matter, quiz JSON,
  * answer ranges, and the house style rules the renderer cannot enforce.
  */
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const DIRS = ['content/docs', 'content/blog']
@@ -57,8 +57,8 @@ const checkQuiz = (file, source, isDoc) => {
     return
   }
 
-  if (isDoc && (quiz.length < 12 || quiz.length > 15)) {
-    warn(file, `${quiz.length} questions (the rubric asks for 12 to 15)`)
+  if (isDoc && (quiz.length < 5 || quiz.length > 8)) {
+    warn(file, `${quiz.length} questions (the rubric asks for 5 to 8)`)
   }
 
   let multis = 0
@@ -94,12 +94,13 @@ const checkQuiz = (file, source, isDoc) => {
     }
   })
 
-  if (isDoc && multis < 2) warn(file, `${multis} select-all items (the rubric asks for 2 to 3)`)
-  if (isDoc && indexCounts.some((n) => n === 0) && quiz.length >= 12) {
+  if (isDoc && multis < 1) warn(file, `${multis} select-all items (the rubric asks for 1 to 2)`)
+  if (isDoc && indexCounts.some((n) => n === 0) && quiz.length >= 8) {
     warn(file, `correct-answer indices are clustered: ${indexCounts.join('/')}`)
   }
 }
 
+const MAX_SECTIONS = 5
 const RELATED_KINDS = ['practice', 'read', 'watch']
 
 const isProseLine = (line) => {
@@ -108,12 +109,28 @@ const isProseLine = (line) => {
   return /^[A-Za-z*_`"(]/.test(text) && !/^([-*]|\d+\.)\s/.test(text) && !text.startsWith('[!')
 }
 
+/** Relative links and images must point at a file inside the doc's own folder. */
+const checkAssets = (file, body) => {
+  const folder = file.slice(0, file.lastIndexOf('/'))
+
+  for (const m of body.matchAll(/\]\(\.\/([^)\s]+)/g)) {
+    if (!existsSync(join(folder, m[1]))) fail(file, `./${m[1]} does not exist in the doc folder`)
+  }
+  for (const m of body.matchAll(/\]\((?:\/)?images\/[^)\s]+/g)) fail(file, `${m[0].slice(2)} must be ./images/... inside the doc folder`)
+}
+
 /** The house reading rules: recaps, a summary, captioned tables and images, glossary, links. */
 const checkReadability = (file, body) => {
   const prose = body.split(/```quiz/)[0]
   const sections = prose.split(/^(?=## )/m).filter((s) => s.startsWith('## '))
 
   if (!/> \[!TERMS\]/.test(prose)) warn(file, 'no > [!TERMS] box (the floating Words-you-will-meet list is empty)')
+
+  const counted = sections.filter((s) => !/^## Summary\s*$/m.test(s))
+
+  if (counted.length > MAX_SECTIONS) {
+    fail(file, `${counted.length} sections before the Summary (max ${MAX_SECTIONS}); split it into two articles in the series`)
+  }
 
   const summary = sections.find((s) => /^## Summary\s*$/m.test(s))
 
@@ -183,15 +200,28 @@ for (const dir of DIRS) {
   let files = []
 
   try {
-    files = readdirSync(dir).filter((f) => f.endsWith('.md'))
+    // Docs are feature folders (<slug>/index.md); blog posts are flat files.
+    files = readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      if (entry.isDirectory()) {
+        const index = join(dir, entry.name, 'index.md')
+
+        return existsSync(index) ? [{ file: index, slug: entry.name }] : []
+      }
+
+      if (dir === 'content/docs' && entry.name.endsWith('.md')) {
+        fail(join(dir, entry.name), 'docs must live in their own folder: content/docs/<slug>/index.md')
+
+        return []
+      }
+
+      return entry.name.endsWith('.md') ? [{ file: join(dir, entry.name), slug: entry.name.replace(/\.md$/, '') }] : []
+    })
   } catch {
     continue
   }
 
-  for (const name of files) {
-    const file = join(dir, name)
+  for (const { file, slug } of files) {
     const source = readFileSync(file, 'utf8')
-    const slug = name.replace(/\.md$/, '')
 
     if (slugs.has(slug)) fail(file, `duplicate slug, also in ${slugs.get(slug)}`)
     slugs.set(slug, file)
@@ -212,23 +242,28 @@ for (const dir of DIRS) {
     const body = source.slice(source.indexOf('---', 3) + 3)
     const sections = body.match(/^## .+$/gm) ?? []
 
-    if (dir === 'content/docs' && (sections.length < 4 || sections.length > 12)) {
-      warn(file, `${sections.length} sections (aim for 6 to 9)`)
-    }
+    if (dir === 'content/docs' && sections.length < 3) warn(file, `${sections.length} sections (aim for 4 or 5 plus Summary)`)
 
     const gotchas = (body.match(/> \[!GOTCHA\]/g) ?? []).length
 
     if (gotchas > 1) warn(file, `${gotchas} gotcha callouts (spend it once)`)
 
-    const badCallout = body.match(/> \[!([A-Z]+)\]/g)?.find(
-      (m) => !['TLDR', 'TERMS', 'ANALOGY', 'STEPS', 'NUANCE', 'INTERVIEW', 'GOTCHA', 'WIN', 'RECAP', 'SUMMARY'].includes(m.slice(4, -1)),
+    const badCallout = body.match(/> \[!([A-Z]+)\][+-]?/g)?.find(
+      (m) =>
+        !['TLDR', 'TERMS', 'ANALOGY', 'STEPS', 'NUANCE', 'INTERVIEW', 'GOTCHA', 'WIN', 'RECAP', 'SUMMARY', 'THINK'].includes(
+          m.replace(/[+-]$/, '').slice(4, -1),
+        ),
     )
 
     if (badCallout) fail(file, `unknown callout ${badCallout}`)
 
     if (source.includes('\u2014')) fail(file, 'contains an em dash')
 
-    if (dir === 'content/docs') checkReadability(file, body)
+    if (dir === 'content/docs') {
+      checkReadability(file, body)
+      checkAssets(file, body)
+      if (meta.series && !meta.part) fail(file, 'a doc in a series needs a "part"')
+    }
 
     checkQuiz(file, source, dir === 'content/docs')
   }

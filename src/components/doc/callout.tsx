@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  Brain,
   ChevronDown,
   ClipboardList,
   Lightbulb,
@@ -31,13 +32,14 @@ export const CALLOUT_STYLES: Record<CalloutType, CalloutStyle> = {
   WIN: { label: 'The win', icon: Trophy, tone: 'callout-win' },
   RECAP: { label: 'Remember from this section', icon: Pin, tone: 'callout-recap' },
   SUMMARY: { label: 'Summary', icon: ClipboardList, tone: 'callout-summary' },
+  THINK: { label: 'Think before you peek', icon: Brain, tone: 'callout-think' },
 }
 
-type CalloutProps = { type: CalloutType; children: ReactNode }
+type CalloutProps = { type: CalloutType; collapsed: boolean; children: ReactNode }
 
-/** Every callout is a collapsible box with a coloured icon, open by default. */
-export const Callout = ({ type, children }: CalloutProps) => {
-  const [open, setOpen] = useState(true)
+/** Every callout is a collapsible box with a coloured icon; depth boxes start closed. */
+export const Callout = ({ type, collapsed, children }: CalloutProps) => {
+  const [open, setOpen] = useState(!collapsed)
   const style = CALLOUT_STYLES[type]
   const Icon = style.icon
 

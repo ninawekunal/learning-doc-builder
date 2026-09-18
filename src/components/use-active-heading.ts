@@ -21,6 +21,11 @@ export const useActiveHeading = (headings: Heading[]): string => {
         if (el && el.getBoundingClientRect().top <= line) current = heading.id
       }
 
+      // At the very bottom the last stops can never reach the line; the last one wins.
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+        current = headings[headings.length - 1].id
+      }
+
       setActive(current)
     }
 

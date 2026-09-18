@@ -5,8 +5,8 @@ worse than a doc with none, because it hands the reader false confidence.
 
 ## Shape
 
-- 12 to 15 items. Default to 15 for a substantial doc.
-- 2 to 3 select-all items: `"multi": true` with `answer` as an array of 2 or 3
+- 5 to 8 items per article (articles are short; a series gets one quiz per part).
+- 1 to 2 select-all items: `"multi": true` with `answer` as an array of 2 or 3
   indices.
 - 4 options each.
 - The block goes at the very end of the file:

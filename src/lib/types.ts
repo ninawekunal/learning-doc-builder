@@ -24,7 +24,7 @@ export type Frontmatter = {
   draft?: boolean
 }
 
-export type Heading = { id: string; text: string; level: 2 | 3 }
+export type Heading = { id: string; text: string; level: 2 | 3; optional?: boolean }
 
 export type ContentEntry = {
   kind: ContentKind

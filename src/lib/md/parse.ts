@@ -1,6 +1,6 @@
 import { Lexer } from 'marked'
 import type { Token, Tokens } from 'marked'
-import type { Block, CalloutType, GlossaryTerm, ParsedDoc, Section, TermToken } from '@/lib/md/types'
+import type { Block, CalloutType, CodeSpec, GlossaryTerm, ParsedDoc, Section, TermToken } from '@/lib/md/types'
 
 export const CALLOUT_TYPES: CalloutType[] = [
   'TLDR',
@@ -13,7 +13,11 @@ export const CALLOUT_TYPES: CalloutType[] = [
   'WIN',
   'RECAP',
   'SUMMARY',
+  'THINK',
 ]
+
+/** Boxes that hold depth rather than the main thread start collapsed. */
+const COLLAPSED_BY_DEFAULT = new Set<CalloutType>(['NUANCE', 'INTERVIEW', 'WIN'])
 
 // breaks: a new line in the source is a new line on the page, so authors
 // decide where a sentence starts on its own line.
@@ -30,10 +34,10 @@ export const slugify = (text: string): string =>
     .slice(0, 60)
 
 /** Lifts `> [!TYPE]` blocks out of the source, leaving a placeholder line. */
-const extractCallouts = (source: string): { source: string; bodies: { type: CalloutType; body: string }[] } => {
+const extractCallouts = (source: string): { source: string; bodies: { type: CalloutType; collapsed: boolean; body: string }[] } => {
   const lines = source.split(/\r?\n/)
   const out: string[] = []
-  const bodies: { type: CalloutType; body: string }[] = []
+  const bodies: { type: CalloutType; collapsed: boolean; body: string }[] = []
 
   let fence: string | null = null
 
@@ -46,7 +50,7 @@ const extractCallouts = (source: string): { source: string; bodies: { type: Call
       else if (fenceMark[1].startsWith(fence)) fence = null
     }
 
-    const open = fence === null ? lines[i].match(/^>\s*\[!([A-Z]+)\]\s*$/) : null
+    const open = fence === null ? lines[i].match(/^>\s*\[!([A-Z]+)\]([+-])?\s*$/) : null
 
     if (!open || !CALLOUT_TYPES.includes(open[1] as CalloutType)) {
       out.push(lines[i])
@@ -61,7 +65,10 @@ const extractCallouts = (source: string): { source: string; bodies: { type: Call
       j += 1
     }
 
-    bodies.push({ type: open[1] as CalloutType, body: inner.join('\n') })
+    const type = open[1] as CalloutType
+    const collapsed = open[2] === '-' || (open[2] !== '+' && COLLAPSED_BY_DEFAULT.has(type))
+
+    bodies.push({ type, collapsed, body: inner.join('\n') })
     out.push('', `<!--CALLOUT:${bodies.length - 1}-->`, '')
     i = j - 1
   }
@@ -75,7 +82,24 @@ const isImageOnly = (token: Tokens.Paragraph): Tokens.Image | null => {
   return inline.length === 1 && inline[0].type === 'image' ? (inline[0] as Tokens.Image) : null
 }
 
-const toBlocks = (tokens: Token[], bodies: { type: CalloutType; body: string }[]): Block[] => {
+/** "tsx title=\"a.ts\" group=\"load\" tab=\"React Query\" open" -> a code spec. */
+const parseCodeInfo = (code: Tokens.Code): CodeSpec => {
+  const info = (code.lang ?? '').trim()
+  const lang = info.split(/\s+/)[0] ?? ''
+  const attr = (name: string): string | undefined => info.match(new RegExp(`${name}="([^"]*)"`))?.[1]
+
+  return {
+    lang: lang.includes('=') ? '' : lang,
+    text: code.text,
+    title: attr('title'),
+    open: /(^|\s)open(\s|$)/.test(info.replace(/"[^"]*"/g, '""')),
+    download: attr('download'),
+    group: attr('group'),
+    tab: attr('tab'),
+  }
+}
+
+const toBlocks = (tokens: Token[], bodies: { type: CalloutType; collapsed: boolean; body: string }[]): Block[] => {
   const blocks: Block[] = []
 
   for (let i = 0; i < tokens.length; i += 1) {
@@ -89,7 +113,12 @@ const toBlocks = (tokens: Token[], bodies: { type: CalloutType; body: string }[]
       if (placeholder) {
         const found = bodies[Number(placeholder[1])]
 
-        if (found) blocks.push({ kind: 'callout', type: found.type, blocks: toBlocks(lex(found.body), bodies) })
+        if (found) blocks.push({
+            kind: 'callout',
+            type: found.type,
+            collapsed: found.collapsed,
+            blocks: toBlocks(lex(found.body), bodies),
+          })
         continue
       }
 
@@ -98,8 +127,16 @@ const toBlocks = (tokens: Token[], bodies: { type: CalloutType; body: string }[]
     }
 
     if (token.type === 'code') {
-      const code = token as Tokens.Code
-      blocks.push({ kind: 'code', lang: code.lang ?? '', text: code.text })
+      const spec = parseCodeInfo(token as Tokens.Code)
+      const previous = blocks[blocks.length - 1]
+
+      if (spec.group && previous?.kind === 'tabs' && previous.group === spec.group) {
+        previous.items.push(spec)
+      } else if (spec.group) {
+        blocks.push({ kind: 'tabs', group: spec.group, items: [spec] })
+      } else {
+        blocks.push({ kind: 'code', ...spec })
+      }
       continue
     }
 
@@ -243,6 +280,16 @@ const markBlocks = (blocks: Block[], ctx: MarkContext): Block[] =>
     return block
   })
 
+const capitalize = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1)
+
+/** Drops the "Optional:" prefix from a heading's first text token; the page shows a badge instead. */
+const stripOptional = (tokens: Token[]): Token[] =>
+  tokens.map((t, i) =>
+    i === 0 && t.type === 'text'
+      ? ({ ...t, raw: capitalize(t.raw.replace(/^optional:\s*/i, '')), text: capitalize((t as Tokens.Text).text.replace(/^optional:\s*/i, '')) } as Token)
+      : t,
+  )
+
 /** Markdown body -> numbered sections, a glossary, and term mentions marked once per section. */
 export const parseDoc = (body: string): ParsedDoc => {
   const extracted = extractCallouts(body)
@@ -263,7 +310,17 @@ export const parseDoc = (body: string): ParsedDoc => {
 
       while (seenIds.has(id)) id = `${id}-x`
       seenIds.add(id)
-      sections.push({ id, title: heading.text.replace(/[`*_]/g, ''), titleTokens: heading.tokens, number: sections.length + 1, blocks: [] })
+      const optional = /^optional:\s*/i.test(heading.text)
+      const titleTokens = optional ? stripOptional(heading.tokens) : heading.tokens
+
+      sections.push({
+        id,
+        title: capitalize(heading.text.replace(/^optional:\s*/i, '').replace(/[`*_]/g, '')),
+        titleTokens,
+        number: sections.length + 1,
+        optional,
+        blocks: [],
+      })
       continue
     }
 

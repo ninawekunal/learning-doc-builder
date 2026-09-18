@@ -2,6 +2,7 @@ import type { Token, Tokens } from 'marked'
 import { Fragment } from 'react'
 import { Callout } from '@/components/doc/callout'
 import { CodeBlock } from '@/components/doc/code-block'
+import { CodeTabs } from '@/components/doc/code-tabs'
 import { FigureBlock } from '@/components/doc/figure-block'
 import { Inline, LineParagraph } from '@/components/doc/inline'
 import { TableBlock } from '@/components/doc/table-block'
@@ -69,12 +70,14 @@ export const Blocks = ({ blocks }: { blocks: Block[] }) => (
       switch (block.kind) {
         case 'callout':
           return (
-            <Callout key={i} type={block.type}>
+            <Callout key={i} type={block.type} collapsed={block.collapsed}>
               <Blocks blocks={block.blocks} />
             </Callout>
           )
         case 'code':
-          return <CodeBlock key={i} code={block.text} lang={block.lang} />
+          return <CodeBlock key={i} spec={block} />
+        case 'tabs':
+          return <CodeTabs key={i} items={block.items} />
         case 'figure':
           return <FigureBlock key={i} src={block.src} alt={block.alt} caption={block.caption} />
         case 'table':

@@ -508,3 +508,174 @@ pre.code-body { padding: 0.9rem 1rem; font-family: 'JetBrains Mono', ui-monospac
   border: 1px solid currentColor;
   vertical-align: 0.1em;
 }
+
+/* ---------------------------------------------------------------
+   v3: eyebrow picker, TOC pills, optional sections, code titles,
+   tabs, think box, practice section, back-to-top.
+   --------------------------------------------------------------- */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.eyebrow-button {
+  padding: 0.35rem 0.6rem;
+  margin-left: -0.6rem;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+
+.eyebrow-button:hover,
+.eyebrow-button[data-state='open'] { background: var(--accent-soft); }
+
+.toc-link {
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+}
+
+.toc-link-active { font-weight: 600; }
+
+.toc-num {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.toc-link-active .toc-num,
+[aria-current='page'] .toc-num { background: var(--primary); color: var(--bg); }
+
+.toc-num-practice { color: var(--accent); }
+
+.section-optional {
+  margin-left: 0.6rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.optional-trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.optional-trigger h2 { margin: 0; }
+
+.optional-hint {
+  margin-top: 0.5rem !important;
+  font-family: var(--font-display);
+  font-size: 0.85rem !important;
+  color: var(--text-muted);
+}
+
+.code-toggle { min-width: 0; }
+
+.code-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.code-lang {
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+  background: var(--border);
+  font-size: 0.65rem;
+}
+
+.code-hint { font-weight: 500; opacity: 0.75; }
+
+@media (max-width: 640px) {
+  .code-hint { display: none; }
+}
+
+.code-actions { display: inline-flex; flex-shrink: 0; gap: 0.15rem; }
+
+.code-tabs {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.callout-think { --tone: var(--info); --tone-soft: var(--info-soft); border-style: dashed; }
+
+.practice-section {
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--border);
+  scroll-margin-top: 6rem;
+}
+
+.top-fab {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s;
+  cursor: pointer;
+}
+
+.top-fab-stacked { bottom: 5.25rem; right: 1.5rem; }
+.top-fab-visible { opacity: 1; transform: none; }
+.top-fab:hover { color: var(--primary); }
+
+@media (max-width: 640px) {
+  .top-fab { right: 1rem; bottom: 1rem; width: 2.6rem; height: 2.6rem; }
+  .top-fab-stacked { right: 1.15rem; bottom: 4.6rem; }
+}
+
+.toc-optional {
+  margin-left: 0.4rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.8;
+}

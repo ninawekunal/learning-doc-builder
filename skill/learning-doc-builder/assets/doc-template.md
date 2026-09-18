@@ -3,8 +3,12 @@ title: REPLACE - sentence case, under 60 characters
 summary: REPLACE - one line that tells someone whether to read this.
 date: YYYY-MM-DD
 tags: [replace, these]
-minutes: 12
+minutes: 10
+# part: 1                # only for a series
+# series: Series name     # only for a series
 ---
+
+<!-- Save as content/docs/<slug>/index.md. Images go in ./images/. Max 5 sections before Summary. -->
 
 ## The big picture
 
@@ -38,16 +42,23 @@ Table: REPLACE - how to read this table.
 
 REPLACE - prose, one sentence per line.
 
-![REPLACE alt text](images/REPLACE.png "REPLACE - a caption in simple words.")
+![REPLACE alt text](./images/REPLACE.png "REPLACE - a caption in simple words.")
+
+> [!THINK]
+> REPLACE - one to three questions to answer before opening the code.
+
+```tsx title="REPLACE.tsx"
+// REPLACE
+```
 
 > [!STEPS]
 > 1. **REPLACE.** One sentence on why.
 > 2. **REPLACE.** One sentence on why.
 
-> [!NUANCE]
+> [!NUANCE]-
 > - REPLACE - a trade-off or an edge case.
 
-> [!INTERVIEW]
+> [!INTERVIEW]-
 > - *REPLACE - the question someone asks.* REPLACE - the short answer.
 
 > [!GOTCHA]

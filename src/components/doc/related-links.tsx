@@ -9,18 +9,14 @@ const KIND: Record<RelatedLink['kind'], { label: string; icon: LucideIcon }> = {
   watch: { label: 'Watch', icon: PlayCircle },
 }
 
-/** "Practice and explore": exercises and further reading chosen for this doc. */
+/** Exercises and further reading chosen for this doc. */
 export const RelatedLinks = ({ links }: { links: RelatedLink[] }) => {
   if (links.length === 0) return null
 
   return (
-    <section className="mt-12" aria-labelledby="practice-and-explore">
-      <h2 id="practice-and-explore" className="font-display text-[22px] font-bold tracking-tight">
-        Practice and explore
-      </h2>
-      <p className="mt-1 text-[15px] text-[var(--text-muted)]">
-        Put it to work. Hands-on exercises first, then reading to go deeper.
-      </p>
+    <div className="mt-10">
+      <h3 className="font-display text-[19px] font-bold tracking-tight">Exercises and further reading</h3>
+      <p className="mt-1 text-[15px] text-[var(--text-muted)]">Hands-on exercises first, then reading to go deeper.</p>
       <ul className="mt-5 grid list-none gap-3 p-0 sm:grid-cols-2">
         {links.map((link) => {
           const kind = KIND[link.kind]
@@ -42,6 +38,6 @@ export const RelatedLinks = ({ links }: { links: RelatedLink[] }) => {
           )
         })}
       </ul>
-    </section>
+    </div>
   )
 }

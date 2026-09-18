@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronIcon, ListIcon } from '@/components/ui/icon'
+import { TocMarker } from '@/components/toc-sidebar'
 import { cn } from '@/lib/cn'
 import { scrollToSection } from '@/lib/scroll-to'
 import type { Heading } from '@/lib/types'
@@ -59,7 +60,7 @@ export const MobileToc = ({ headings, active }: MobileTocProps) => {
           className="absolute inset-x-0 top-full max-h-[60vh] overflow-y-auto border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2 shadow-[var(--shadow)]"
         >
           <ul>
-            {headings.map((heading) => (
+            {headings.map((heading, index) => (
               <li key={heading.id}>
                 <a
                   href={`#${heading.id}`}
@@ -68,14 +69,17 @@ export const MobileToc = ({ headings, active }: MobileTocProps) => {
                     scrollToSection(event, heading.id)
                   }}
                   className={cn(
-                    'block cursor-pointer rounded-lg px-2 py-2.5 text-[13px] leading-snug',
-                    heading.level === 3 && 'pl-6 text-[var(--text-muted)]',
+                    'toc-link flex cursor-pointer items-start gap-2.5 rounded-lg px-2 py-2.5',
                     active === heading.id
                       ? 'bg-[var(--primary-soft)] font-medium text-[var(--primary)]'
                       : 'text-[var(--text)]',
                   )}
                 >
-                  {heading.text}
+                  <TocMarker heading={heading} index={index} headings={headings} />
+                  <span className="min-w-0 flex-1">
+                {heading.text}
+                {heading.optional && <span className="toc-optional">Optional</span>}
+              </span>
                 </a>
               </li>
             ))}

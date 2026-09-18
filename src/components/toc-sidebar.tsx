@@ -1,6 +1,20 @@
+import { Dumbbell } from 'lucide-react'
+import { PRACTICE_ID } from '@/components/doc/practice-section'
 import { cn } from '@/lib/cn'
 import { scrollToSection } from '@/lib/scroll-to'
 import type { Heading } from '@/lib/types'
+
+/** A numbered pill per section; the practice stop gets a dumbbell instead. */
+export const TocMarker = ({ heading, index, headings }: { heading: Heading; index: number; headings: Heading[] }) =>
+  heading.id === PRACTICE_ID ? (
+    <span className="toc-num toc-num-practice" aria-hidden>
+      <Dumbbell className="size-3" />
+    </span>
+  ) : (
+    <span className="toc-num" aria-hidden>
+      {headings.filter((h, i) => h.level === 2 && i <= index).length}
+    </span>
+  )
 
 type TocSidebarProps = { headings: Heading[]; active: string }
 
@@ -15,26 +29,24 @@ export const TocSidebar = ({ headings, active }: TocSidebarProps) => {
       <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
         On this page
       </p>
-      <ul className="space-y-0.5 border-l border-[var(--border)]">
+      <ul className="space-y-0.5">
         {headings.map((heading, index) => (
           <li key={heading.id}>
             <a
               href={`#${heading.id}`}
               onClick={(event) => scrollToSection(event, heading.id)}
               className={cn(
-                '-ml-px block cursor-pointer border-l-2 py-1 text-[13px] leading-snug transition-colors',
-                heading.level === 3 ? 'pl-6' : 'pl-3',
+                'toc-link flex cursor-pointer items-start gap-2.5 rounded-lg px-2 py-1.5 transition-colors',
                 active === heading.id
-                  ? 'border-[var(--primary)] font-medium text-[var(--primary)]'
-                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]',
+                  ? 'toc-link-active bg-[var(--primary-soft)] text-[var(--primary)]'
+                  : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]',
               )}
             >
-              {heading.level === 2 && (
-                <span className="mr-1.5 tabular-nums opacity-60">
-                  {String(headings.filter((h, i) => h.level === 2 && i <= index).length).padStart(2, '0')}
-                </span>
-              )}
-              {heading.text}
+              <TocMarker heading={heading} index={index} headings={headings} />
+              <span className="min-w-0 flex-1">
+                {heading.text}
+                {heading.optional && <span className="toc-optional">Optional</span>}
+              </span>
             </a>
           </li>
         ))}

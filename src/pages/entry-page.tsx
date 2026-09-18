@@ -5,11 +5,12 @@ import { Byline } from '@/components/byline'
 import { DocBody } from '@/components/doc/doc-body'
 import { DocContext } from '@/components/doc/doc-context'
 import { GlossaryButton } from '@/components/doc/glossary-button'
-import { RelatedLinks } from '@/components/doc/related-links'
+import { PRACTICE_ID, PracticeSection } from '@/components/doc/practice-section'
 import { useDocTitle } from '@/components/doc/use-doc-title'
 import { MobileToc } from '@/components/mobile-toc'
-import { Quiz } from '@/components/quiz'
+import { BackToTop } from '@/components/back-to-top'
 import { SeriesNav } from '@/components/series-nav'
+import { SeriesPicker } from '@/components/series-picker'
 import { TocSidebar } from '@/components/toc-sidebar'
 import { useActiveHeading } from '@/components/use-active-heading'
 import { Badge } from '@/components/ui/badge'
@@ -20,10 +21,6 @@ import type { ContentEntry, ContentKind, Heading } from '@/lib/types'
 
 type EntryPageProps = { kind: ContentKind; bionic: boolean }
 
-const eyebrow = (entry: ContentEntry): string =>
-  entry.meta.part !== undefined
-    ? `${entry.meta.series ? `${entry.meta.series} · ` : ''}Part ${entry.meta.part}`
-    : (entry.meta.tags[0] ?? entry.kind)
 
 const Missing = () => (
   <div className="py-20 text-center">
@@ -39,8 +36,13 @@ const Missing = () => (
 const Article = ({ entry, bionic }: { entry: ContentEntry; bionic: boolean }) => {
   const doc = useMemo(() => parseDoc(entry.body), [entry])
   const headings = useMemo<Heading[]>(
-    () => doc.sections.map((s) => ({ id: s.id, text: s.title, level: 2 })),
-    [doc],
+    () => [
+      ...doc.sections.map((s): Heading => ({ id: s.id, text: s.title, level: 2, optional: s.optional })),
+      ...(entry.quiz.length > 0 || entry.related.length > 0
+        ? [{ id: PRACTICE_ID, text: 'Practice and explore', level: 2 } satisfies Heading]
+        : []),
+    ],
+    [doc, entry],
   )
   const active = useActiveHeading(headings)
   const context = useMemo(() => ({ bionic }), [bionic])
@@ -54,7 +56,11 @@ const Article = ({ entry, bionic }: { entry: ContentEntry; bionic: boolean }) =>
           <MobileToc headings={headings} active={active} />
 
           <header className="mb-4 border-b border-[var(--border)] pb-8">
-            <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">{eyebrow(entry)}</p>
+            {entry.meta.part !== undefined ? (
+              <SeriesPicker entry={entry} />
+            ) : (
+              <p className="eyebrow">{entry.meta.tags[0] ?? entry.kind}</p>
+            )}
             <h1 className="font-display text-[28px] font-bold leading-[1.15] tracking-[-0.015em] sm:text-[40px]">
               {entry.meta.title}
             </h1>
@@ -78,9 +84,7 @@ const Article = ({ entry, bionic }: { entry: ContentEntry; bionic: boolean }) =>
             </div>
           )}
 
-          <Quiz title={entry.meta.title} items={entry.quiz} bionic={bionic} />
-
-          <RelatedLinks links={entry.related} />
+          <PracticeSection title={entry.meta.title} quiz={entry.quiz} related={entry.related} bionic={bionic} />
 
           <SeriesNav slug={entry.slug} />
         </div>
@@ -89,6 +93,7 @@ const Article = ({ entry, bionic }: { entry: ContentEntry; bionic: boolean }) =>
       </div>
 
       <GlossaryButton terms={doc.glossary} />
+      <BackToTop stacked={doc.glossary.length > 0} />
     </DocContext.Provider>
   )
 }

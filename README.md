@@ -17,7 +17,7 @@ something from the retrieval-practice literature rather than to taste.
 | Path | What it is |
 | --- | --- |
 | `skill/learning-doc-builder/` | The Claude skill. Copy it into your own setup. |
-| `content/docs/*.md` | Learning docs. One markdown file each, quiz included. |
+| `content/docs/<slug>/index.md` | Learning docs. One folder each, with its images and downloads; quiz included. |
 | `content/blog/*.md` | Blog posts. Same renderer, quiz optional. |
 | `src/` | The React app that renders them. |
 | `scripts/check-content.mjs` | The validator that gates CI. |
@@ -87,14 +87,15 @@ The skill:
 2. **Researches before templating.** For a codebase topic it reads your real
    files and cites real paths. A beautiful shell around wrong facts is worse
    than no doc.
-3. Writes 6 to 9 short sections, each with TL;DR / Steps / Nuances / Interview
-   buckets, at most one code snippet, and an optional inline SVG diagram.
-4. Writes a 12 to 15 question quiz of **scenario** questions, 2 to 3 of them
+3. Cuts the topic into short articles of 4 or 5 sections (a series when it is
+   big), teaching code as a walkthrough: a "think first" prompt, then the code,
+   collapsed, with tabs for alternatives and optional depth closed by default.
+4. Writes a 5 to 8 question quiz of **scenario** questions, 1 to 2 of them
    select-all, each with an explanation covering why the right answer is right
    and why the tempting wrong one is wrong.
 5. Runs `pnpm check:content` and fixes what it flags.
 
-Output lands in `content/docs/<slug>.md` and appears in the app on save.
+Output lands in `content/docs/<slug>/index.md` and appears in the app on save.
 
 ### 3. Write one by hand
 
@@ -176,7 +177,7 @@ correctly on Pages with no 404 rewrite and no server configuration.
 | Explanation after each answer | Feedback, which is what rescues a failed attempt |
 | Copyable score | A record to space your next review against |
 
-`content/docs/active-recall.md` is the long version, with the citations.
+`content/docs/active-recall/` is the long version, with the citations.
 
 ---
 

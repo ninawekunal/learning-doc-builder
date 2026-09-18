@@ -88,7 +88,7 @@ Table: each row is a header and what it tells the browser.
 | Header | Meaning |
 | --- | --- |
 
-![Alt text for screen readers](images/cache-flow.png "A plain-English caption under the image.")
+![Alt text for screen readers](./images/cache-flow.png "A plain-English caption under the image.")
 
 > [!RECAP]
 > - The one thing to remember from this section.
@@ -107,10 +107,13 @@ Table: each row is a header and what it tells the browser.
 ```
 ````
 
+Save it as `content/docs/<slug>/index.md`: every doc is its own folder, with its images and downloads beside it.
+An article has at most 5 sections before the Summary; a bigger topic becomes a series, and the series name above the title opens a list of every part.
 Every section ends with a **Remember** box, and the doc ends with a **Summary** section.
-The checker fails a doc that is missing either.
+The checker fails a doc that breaks any of these.
 
 > [!RECAP]
+> - One folder per doc, at most 5 sections, bigger topics become a series.
 > - Sections end with a RECAP box; the doc ends with a Summary.
 > - Tables need a `Table:` line and images need a caption.
 
@@ -130,13 +133,34 @@ Table: each row is a box type, how it looks, and when to use it.
 | `> [!WIN]` | Green, trophy | The measured outcome |
 | `> [!RECAP]` | Pin | Key points at the end of every section |
 | `> [!SUMMARY]` | Green, clipboard | The whole doc's key points, in the Summary section |
+| `> [!THINK]` | Blue, dashed, brain | Questions to answer before opening the code below it |
 
 Every box can be collapsed.
-Code blocks are collapsible too, and have a copy button.
+Nuances, interview notes and wins start closed; add `-` to close any box (`> [!STEPS]-`) or `+` to open one.
+A section titled `## Optional: ...` starts closed too.
 
 > [!RECAP]
-> - Ten box types, each with its own colour and icon.
+> - Eleven box types, each with its own colour and icon; depth boxes start closed.
 > - Glossary words become clickable underlines across the doc.
+
+## Code: think first, then peek
+
+Every code block starts closed, showing its file name and length, so the reader thinks before they look.
+
+Table: each row is something you can write after the language in a code fence, and what it does.
+
+| Write | What the reader gets |
+| --- | --- |
+| `title="columns.tsx"` | The file name in the header |
+| `download="invoices.json"` | A Download button next to Copy |
+| `open` | The block starts open |
+| `group="load" tab="React Query"` | Blocks sharing a group become one block with tabs |
+
+The quiz and the practice links close every doc in one "Practice and explore" section, which has its own entry in the section list.
+
+> [!RECAP]
+> - Code starts closed; a THINK box above it says what to figure out first.
+> - Tabs show two ways of doing the same thing side by side.
 
 ## Writing so it is easy to read
 

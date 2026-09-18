@@ -73,8 +73,8 @@ export const Quiz = ({ title, items, bionic }: QuizProps) => {
 
   if (!started) {
     return (
-      <Card className="mt-10">
-        <h2 className="mt-0 text-lg font-semibold">Check your recall</h2>
+      <Card className="mt-6">
+        <h3 className="mt-0 text-lg font-semibold">Check your recall</h3>
         <p className="text-[15px] text-[var(--text-muted)]">
           {items.length} scenario questions, graded one at a time with an explanation after each.
           Reading this doc twice will not help you here; applying it will.
@@ -92,11 +92,11 @@ export const Quiz = ({ title, items, bionic }: QuizProps) => {
       pct >= 80 ? 'You can teach this.' : pct >= 60 ? 'Solid, but reread the misses.' : 'Skimmed it. Go again.'
 
     return (
-      <Card className="mt-10">
+      <Card className="mt-6">
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-6">
           <ScoreRing correct={score} total={items.length} />
           <div className="text-center sm:text-left">
-            <h2 className="mt-0 text-lg font-semibold">{verdict}</h2>
+            <h3 className="mt-0 text-lg font-semibold">{verdict}</h3>
             <p className="text-[15px] text-[var(--text-muted)]">
               {score} of {items.length} correct. The misses are listed below with the reasoning.
             </p>
@@ -129,7 +129,7 @@ export const Quiz = ({ title, items, bionic }: QuizProps) => {
   }
 
   return (
-    <Card className="mt-10">
+    <Card className="mt-6">
       <div className="mb-4 h-1 w-full overflow-hidden rounded-full bg-[var(--surface-2)]">
         <div
           className="h-full rounded-full bg-[var(--primary)] transition-[width]"
