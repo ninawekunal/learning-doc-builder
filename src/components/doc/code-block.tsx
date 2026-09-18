@@ -1,8 +1,8 @@
 import { Check, ChevronDown, Code2, Copy } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/cn'
-import { highlightCode, languageLabel } from '@/lib/highlight'
+import { languageLabel } from '@/lib/language-label'
 
 type CodeBlockProps = { code: string; lang: string }
 
@@ -10,7 +10,20 @@ type CodeBlockProps = { code: string; lang: string }
 export const CodeBlock = ({ code, lang }: CodeBlockProps) => {
   const [open, setOpen] = useState(true)
   const [copied, setCopied] = useState(false)
-  const html = useMemo(() => highlightCode(code, lang), [code, lang])
+  const [html, setHtml] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    // The highlighter and its grammars are a separate chunk, loaded on first use.
+    void import('@/lib/highlight').then(({ highlightCode }) => {
+      if (!cancelled) setHtml(highlightCode(code, lang))
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [code, lang])
 
   const copy = () => {
     void navigator.clipboard.writeText(code).then(() => {
