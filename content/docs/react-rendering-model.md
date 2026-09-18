@@ -57,6 +57,10 @@ The **commit** step is React making the real changes to the page, and it happens
 > Because React may throw a render away and run it again, anything with a side effect written straight in your component - sending a request, writing to storage - might happen twice, or never.
 > That is why React's development-only "StrictMode" deliberately calls your components twice: to flush out that mistake, not to cause one.
 
+> [!RECAP]
+> - A re-render is React calling your function again; the screen may not change.
+> - Render can be thrown away and redone; commit happens once.
+
 ## The four reasons a component runs again
 
 > [!TLDR]
@@ -92,6 +96,10 @@ const Parent = () => {
 > - *Does `memo` stop a re-render caused by context?* No. Context goes straight to every component that reads it.
 > - *Why does passing `<Expensive />` as `children` avoid re-rendering it?* It was created higher up, so it is the same object each time, and React skips unchanged objects.
 
+> [!RECAP]
+> - State, a parent re-render, context, or a hook - those are the four triggers.
+> - memo only blocks re-renders caused by the parent.
+
 ## When React skips work
 
 > [!TLDR]
@@ -113,6 +121,10 @@ setUser({ ...user })        // a new object with the same contents: re-renders
 > - Object and array state almost never gets the skip, because you normally create a new one. Keep simple values in state where you can.
 > - A skip stops everything below it too, so a skip near the top of the page saves far more than one at the bottom.
 
+> [!RECAP]
+> - React skips work when new state is the very same value or object.
+> - A skip near the top of the page saves the most.
+
 ## Keys: telling list items apart
 
 > [!TLDR]
@@ -129,6 +141,10 @@ Using the array position as the key only works for a list that never gets reorde
 > Changing a component's `key` throws it away and builds a fresh one, wiping its state.
 > That can be useful on purpose - `<Form key={userId} />` resets the form when the user changes.
 > But a key that accidentally changes every render, like one built from `Math.random()`, rebuilds that part of the page on *every* render, losing typed text and focus.
+
+> [!RECAP]
+> - Keys tell React which list item is which between renders.
+> - A key that changes every render rebuilds that part of the page.
 
 ## Memoisation, and when it does nothing
 
@@ -153,6 +169,10 @@ const rows = useMemo(() => transform(raw), [raw])
 > - *When does `useMemo` make things worse?* When the calculation is cheaper than the checking and storing - true for most short arrays and small objects.
 > - *Why might adding `memo` change nothing?* The component re-renders because of state or context, or a prop is a new object every time.
 
+> [!RECAP]
+> - Memoisation costs a little every render in exchange for maybe saving work.
+> - It only pays off for expensive work or results others depend on.
+
 ## Urgent and non-urgent updates
 
 > [!TLDR]
@@ -173,6 +193,10 @@ const onType = (value: string) => {
 > - `isPending` lets you show "results updating" without a flashing spinner.
 > - Only rendering can be paused. Once React starts committing, it finishes.
 
+> [!RECAP]
+> - Transitions mark updates as non-urgent so typing stays responsive.
+> - They cannot speed up one long synchronous function.
+
 ## A debugging order that works
 
 > [!STEPS]
@@ -184,6 +208,18 @@ const onType = (value: string) => {
 > [!WIN]
 > The fix that always works is keeping state close to where it is used.
 > The lower in the tree a piece of state lives, the less of the page its changes can touch - at no runtime cost, and nothing breaks when someone adds a prop.
+
+> [!RECAP]
+> - Use the profiler to find why something rendered.
+> - Move state down before reaching for memo.
+
+## Summary
+
+> [!SUMMARY]
+> - Rendering is working out the screen; committing is changing it.
+> - Components re-render because of state, a parent, context or a hook - not because props changed on their own.
+> - Stable identities and good keys let React skip work.
+> - Memoise only where it pays; keep state close to where it is used.
 
 ```quiz
 [
@@ -327,6 +363,46 @@ const onType = (value: string) => {
     ],
     "answer": 1,
     "expl": "The compiler bails out of code whose hook dependencies it cannot verify, silently dropping memoisation for that scope. It does not fail the build, which is what makes the regression easy to miss."
+  }
+]
+```
+
+```related
+[
+  {
+    "title": "Render and commit",
+    "url": "https://react.dev/learn/render-and-commit",
+    "source": "React docs",
+    "kind": "read",
+    "note": "The official explanation of the two phases in this doc."
+  },
+  {
+    "title": "Preserving and resetting state",
+    "url": "https://react.dev/learn/preserving-and-resetting-state",
+    "source": "React docs",
+    "kind": "read",
+    "note": "How position and keys decide which component keeps which state."
+  },
+  {
+    "title": "useMemo",
+    "url": "https://react.dev/reference/react/useMemo",
+    "source": "React docs",
+    "kind": "read",
+    "note": "When memoising a calculation is worth it."
+  },
+  {
+    "title": "useTransition",
+    "url": "https://react.dev/reference/react/useTransition",
+    "source": "React docs",
+    "kind": "read",
+    "note": "Marking updates as non-urgent."
+  },
+  {
+    "title": "Tabs",
+    "url": "https://www.greatfrontend.com/questions/user-interface/tabs",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "note": "A small component where keeping state in the right place matters."
   }
 ]
 ```

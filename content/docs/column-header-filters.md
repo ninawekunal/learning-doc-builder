@@ -24,10 +24,12 @@ minutes: 16
 > Each popover keeps a draft and applies it once on "Apply".
 > One filter object, owned by the page, feeds every place that shows or changes filters.
 
-![The Trade orders blotter with filterable column headers: each filterable title has a funnel and a separate sort button, and plain headers sit at the same height](images/07-column-header-filters-popover/default.png)
+![The Trade orders blotter with filterable column headers: each filterable title has a funnel and a separate sort button, and plain headers sit at the same height](images/07-column-header-filters-popover/default.png "The orders table with filterable headers: each title has a funnel and its own small sort button.")
 
 Everyone who has used a spreadsheet knows the move: click the column header, tick two values, done.
 A header filter sits right where your eyes already are, so nobody has to translate "this column" into "that field in a form".
+
+Table: each row is a place in the UI, what it reads from the filter object, and what it may change.
 
 | Place | Reads | Changes |
 | --- | --- | --- |
@@ -38,6 +40,10 @@ A header filter sits right where your eyes already are, so nobody has to transla
 
 > [!NUANCE]
 > Header filters are the wrong tool for "working orders OR anything from my desk" (that crosses columns) and for saved views (those belong in the toolbar).
+
+> [!RECAP]
+> - Filter from the column title; sort from a small separate button.
+> - One filter object feeds every place that shows filters.
 
 ## Decide the shape of the filters first
 
@@ -60,6 +66,10 @@ export type OrderFilters = {
 > - Count active filters by group: a minimum and a maximum together count as one filter.
 > - No `Date` objects in here. Dates are text; `Date` only exists inside the date picker.
 
+> [!RECAP]
+> - Design the filter object first: plain values only.
+> - Count a min and max together as one filter.
+
 ## The filter header
 
 > [!TLDR]
@@ -77,7 +87,11 @@ export type OrderFilters = {
 > - Do not add an `aria-label` to a button that already shows text. It replaces what screen readers and voice control hear. Add extra words in hidden text instead, so it reads "Status, filter, 2 active".
 > - A table that is filtered but does not look filtered reads as missing data.
 
-![Orders blotter with the Symbol popover open under its title, the sort icon button beside the title and the option list loaded](images/07-column-header-filters-popover/symbol-popover-open.png)
+![Orders blotter with the Symbol popover open under its title, the sort icon button beside the title and the option list loaded](images/07-column-header-filters-popover/symbol-popover-open.png "The Symbol filter open under its column title, with the full option list.")
+
+> [!RECAP]
+> - The title opens the filter; the funnel shows whether it is on.
+> - Do not override visible text with an aria-label.
 
 ## Draft, Apply, Clear
 
@@ -89,11 +103,15 @@ export type OrderFilters = {
 > It is a shopping basket, not a vending machine.
 > You gather what you want, then pay once at the till.
 
-![Committing on every tick fires one request and one history entry per tick, while a draft that commits on Apply fires one request, and Escape or an outside click discards the draft by unmounting the body](images/07-column-header-filters-popover/draft-apply-commit.png)
+![Committing on every tick fires one request and one history entry per tick, while a draft that commits on Apply fires one request, and Escape or an outside click discards the draft by unmounting the body](images/07-column-header-filters-popover/draft-apply-commit.png "Applying every tick sends a request each time; a draft sends one on Apply, and Escape throws it away.")
 
 > [!NUANCE]
 > - No special reset code is needed. The popover's content is removed when it closes, so next time it starts fresh from the applied filter.
 > - A popover's "Clear" clears only its own draft. "Clear all" lives with the chips. Mixing them up confuses people.
+
+> [!RECAP]
+> - Keep a draft, apply once, discard on Escape.
+> - A popover Clear clears only its draft.
 
 ## Long option lists, ranges and dates
 
@@ -114,7 +132,12 @@ export type OrderFilters = {
 > So the calendar highlights the wrong day for American users.
 > Build dates from year, month and day in local time, store plain `2026-09-17` text, and let the server decide when a trading day starts.
 
-![Submitted popover with Today and This week presets above a range calendar, three days selected, and the Clear and Apply footer](images/07-column-header-filters-popover/date-range-popover.png)
+![Submitted popover with Today and This week presets above a range calendar, three days selected, and the Clear and Apply footer](images/07-column-header-filters-popover/date-range-popover.png "The date filter: Today and This week shortcuts above a calendar with three days picked.")
+
+> [!RECAP]
+> - Load long option lists on first open, from all the user's data.
+> - Keep half-typed numbers as text.
+> - Never turn a date string into a Date outside the calendar.
 
 ## One object, many places
 
@@ -122,7 +145,7 @@ export type OrderFilters = {
 > The usual bug is two places disagreeing: a chip says one thing and a header badge another.
 > The fix is to have only one copy, so there is nothing to keep in sync.
 
-![The page owns one OrderFilters object that header popovers, the All filters panel and the chips row read and write, and one serializer turns it into the URL, the list request, the CSV link and the query key](images/07-column-header-filters-popover/one-filter-object.png)
+![The page owns one OrderFilters object that header popovers, the All filters panel and the chips row read and write, and one serializer turns it into the URL, the list request, the CSV link and the query key](images/07-column-header-filters-popover/one-filter-object.png "The page owns one filter object; headers, the panel and chips all read and write it, and it becomes the URL.")
 
 > [!STEPS]
 > 1. **The page owns the object** and shares it, plus one `updateFilters` function, with everything below it.
@@ -133,7 +156,11 @@ export type OrderFilters = {
 > [!NUANCE]
 > - Share the object through React context rather than rebuilding the columns with it. Rebuilt columns make every header restart, closing any open popover.
 
-![Blotter with Symbol, Status and Quantity badges active, the matching chips row, and the All filters sheet open showing the same symbols, status and minimum quantity](images/07-column-header-filters-popover/all-filters-panel.png)
+![Blotter with Symbol, Status and Quantity badges active, the matching chips row, and the All filters sheet open showing the same symbols, status and minimum quantity](images/07-column-header-filters-popover/all-filters-panel.png "The All filters panel open, showing the same choices as the header badges and chips.")
+
+> [!RECAP]
+> - One copy of the filters means nothing can disagree.
+> - updateFilters also resets to page 1.
 
 ## Into the URL and to the server
 
@@ -150,6 +177,8 @@ export type OrderFilters = {
 > [!INTERVIEW]
 > - *What did an unused filter API teach?* A shared table kit shipped a second filter API that no page ever used, and it became dead code. Build the shared version after the second real use, not before the first.
 
+Table: each row is a styling rule for filter headers and popovers.
+
 | Styling rule | Value |
 | --- | --- |
 | Filter headers and plain headers | Same height and text size |
@@ -159,6 +188,18 @@ export type OrderFilters = {
 
 > [!WIN]
 > Filter from the title, sort from a small button, draft and apply once - and every chip, badge, URL and export agrees, because there is only one filter object.
+
+> [!RECAP]
+> - One function writes the URL and one schema reads it, on both ends.
+> - Nonsense URL values quietly mean "no filter".
+
+## Summary
+
+> [!SUMMARY]
+> - Put filters on the column title and sorting on a small button.
+> - Draft inside the popover and apply once.
+> - Load options lazily from all the user's data, and keep dates as text.
+> - One page-owned filter object, one way to write it into the URL, one schema to read it back.
 
 ```quiz
 [
@@ -334,6 +375,47 @@ export type OrderFilters = {
     ],
     "answer": 2,
     "expl": "The state must become request params and come back out of the URL anyway. An intermediate untyped layer adds two mappers and no value."
+  }
+]
+```
+
+```related
+[
+  {
+    "title": "Column filtering guide",
+    "url": "https://tanstack.com/table/v8/docs/guide/column-filtering",
+    "source": "TanStack Table docs",
+    "kind": "read",
+    "note": "Built-in column filters - the right tool when all rows are in the browser."
+  },
+  {
+    "title": "Column faceting",
+    "url": "https://tanstack.com/table/v8/docs/guide/column-faceting",
+    "source": "TanStack Table docs",
+    "kind": "read",
+    "note": "Option lists with counts, computed from the other filters."
+  },
+  {
+    "title": "Popover",
+    "url": "https://ui.shadcn.com/docs/components/popover",
+    "source": "shadcn/ui",
+    "kind": "read",
+    "note": "The component the header filters are built on."
+  },
+  {
+    "title": "Data Table IV",
+    "url": "https://www.greatfrontend.com/questions/user-interface/data-table-iv",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "difficulty": "Hard",
+    "note": "Add filtering to a generic table, then try moving it into the column headers."
+  },
+  {
+    "title": "Debounce",
+    "url": "https://www.greatfrontend.com/questions/javascript/debounce",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "note": "The helper behind search boxes that do not fire a request per keystroke."
   }
 ]
 ```

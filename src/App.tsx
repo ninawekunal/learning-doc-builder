@@ -1,5 +1,6 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from '@/components/layout'
+import { ScrollToTop } from '@/components/scroll-to-top'
 import { EntryPage } from '@/pages/entry-page'
 import { Home } from '@/pages/home'
 import { HowItWorks } from '@/pages/how-it-works'
@@ -13,6 +14,7 @@ export const App = () => {
 
   return (
     <HashRouter>
+      <ScrollToTop />
       <Layout bionic={bionic} onToggleBionic={toggleBionic}>
         <Routes>
           <Route path="/" element={<Home />} />

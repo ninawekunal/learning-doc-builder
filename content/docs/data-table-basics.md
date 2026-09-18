@@ -34,6 +34,8 @@ Its "Positions blotter" is a table of the positions a trading desk holds.
 
 Every data table, in any library, has four parts:
 
+Table: each row is one of the four parts every data table has, with who is responsible for it.
+
 | Part | What it is | Who writes it |
 | --- | --- | --- |
 | Data | The array of row objects | You |
@@ -41,11 +43,15 @@ Every data table, in any library, has four parts:
 | Row pipeline | Filter, sort, page | TanStack Table (or you, in an interview) |
 | Markup | The actual `<table>` HTML and controls | shadcn/ui pieces, wired up by you |
 
-![TanStack Table hands rows to your component, your component maps them to JSX, and shadcn/ui supplies the styled table elements.](images/01-data-table-basics/headless-split.png)
+![TanStack Table hands rows to your component, your component maps them to JSX, and shadcn/ui supplies the styled table elements.](images/01-data-table-basics/headless-split.png "TanStack works out the rows, your component turns them into JSX, and shadcn/ui makes them look good.")
 
 > [!ANALOGY]
 > TanStack Table is the kitchen and shadcn/ui is the plates.
 > The kitchen prepares the food (which rows, in what order), the plates make it look good, and your component is the waiter carrying one to the other.
+
+> [!RECAP]
+> - Every table runs filter, then sort, then page - always in that order.
+> - TanStack Table does the logic; shadcn/ui does the looks; your component connects them.
 
 ## The interview version: plain state
 
@@ -58,7 +64,7 @@ You never store "the rows on screen" anywhere.
 You store only what the user chose, and you *calculate* the rows from that, on every render.
 That calculation is called **derived state**: it is derived from other state, so it can never fall out of sync.
 
-![The row pipeline runs filter, sort, then paginate, and any change to the filter or sort sends the page back to 1.](images/01-data-table-basics/row-pipeline.png)
+![The row pipeline runs filter, sort, then paginate, and any change to the filter or sort sends the page back to 1.](images/01-data-table-basics/row-pipeline.png "The rows go through three steps in order - filter, sort, page - and changing the first two sends you back to page 1.")
 
 ```ts
 const { total, pageRows } = useMemo(() => {
@@ -94,6 +100,11 @@ A match on page 5 simply disappears.
 > - *Why filter before sort?* Sorting costs more as the list grows, so shrink the list first.
 > - *Where do empty values go when sorting descending?* Still at the bottom. Handle them before applying the direction.
 
+> [!RECAP]
+> - Store only what the user chose; calculate the visible rows from it every render.
+> - Copy before sorting, and keep empty values at the bottom in both directions.
+> - The footer total counts filtered rows, not the page.
+
 ## Going back to page 1
 
 > [!TLDR]
@@ -123,7 +134,11 @@ Interviewers tend to ask the same follow-ups: a page-size picker (reset to page 
 > - *Where does `aria-sort` go?* `aria-sort` tells a screen reader how a column is sorted. It goes on the header cell (`th`), not on the button inside it.
 > - *Why make the header a real `Button`?* Keyboard users can tab to it and press Enter, for free.
 
-![The plain React version: a search box, six sortable headers, twenty rows and a page label](images/01-data-table-basics/interview-version.png)
+![The plain React version: a search box, six sortable headers, twenty rows and a page label](images/01-data-table-basics/interview-version.png "The plain-React version: a search box, sortable headers, twenty rows and a page label.")
+
+> [!RECAP]
+> - Any change to search, filter or sort jumps back to page 1.
+> - Reset the page in the same handler, never in a useEffect.
 
 ## Columns, and why "the same object" matters
 
@@ -168,6 +183,11 @@ Sorting uses the raw value, so numbers sort as numbers, not as text like "$1,640
 > [!INTERVIEW]
 > - *What does `getRowId` fix?* Without it, TanStack names rows "0, 1, 2..." by position. Tick row 0, sort, and a different position is now row 0 - and looks ticked.
 
+> [!RECAP]
+> - React compares objects by identity, not by contents.
+> - Declare columns once, outside the component, and always pass getRowId.
+> - Pass live handlers to cells through the table meta option.
+
 ## Pagination with TanStack
 
 > [!TLDR]
@@ -189,7 +209,12 @@ You switch each one on by passing it in.
 >   But it also does it when the data refreshes, so on a live screen the user is thrown back to page 1 every few seconds.
 > - If you switch that off, resetting on search and sort is your job again.
 
-![The blotter on page 3 with 50 rows per page, the footer reading 101-150 of 240](images/01-data-table-basics/page-3-size-50.png)
+![The blotter on page 3 with 50 rows per page, the footer reading 101-150 of 240](images/01-data-table-basics/page-3-size-50.png "Page 3 with 50 rows per page. The footer says 101-150 of 240.")
+
+> [!RECAP]
+> - Pagination is one row model plus one piece of state; pageIndex starts at 0.
+> - Count the total from getPrePaginationRowModel.
+> - autoResetPageIndex also resets on data refresh - turn it off for live screens.
 
 ## Sorting with TanStack
 
@@ -218,6 +243,10 @@ You write it for ascending order only; TanStack flips it for descending.
 > [!INTERVIEW]
 > - *How do you sort by two columns?* Shift-click the second one. TanStack keeps an array of sorts; `getSortIndex()` tells you which one is the tie-breaker.
 
+> [!RECAP]
+> - Write sortingFn for ascending only; TanStack flips it.
+> - Use sortUndefined: "last" and map null to undefined to keep empties at the bottom.
+
 ## Filtering with TanStack
 
 > [!TLDR]
@@ -245,7 +274,11 @@ export const matchPosition: FilterFn<PositionRow> = (row, _columnId, value) => {
 > - A dropdown filter should match exactly (`filterFn: "equals"`). The default "contains" match means "FX" also matches "FX Options".
 > - The dropdown component refuses an empty value, so "All desks" uses a stand-in value that clears the filter.
 
-![Searching for "nvda" narrows the blotter to 18 NVIDIA positions and the footer reads 1-18 of 18](images/01-data-table-basics/search-nvda.png)
+![Searching for "nvda" narrows the blotter to 18 NVIDIA positions and the footer reads 1-18 of 18](images/01-data-table-basics/search-nvda.png "Typing 'nvda' leaves the 18 NVIDIA rows, and the footer updates to 1-18 of 18.")
+
+> [!RECAP]
+> - Name your search fields yourself; TanStack guesses from the first row.
+> - Dropdown filters should match exactly with filterFn: "equals".
 
 ## Making it easy to read all day
 
@@ -254,6 +287,8 @@ export const matchPosition: FilterFn<PositionRow> = (row, _columnId, value) => {
 > Numbers line up on the right with equal-width digits, so a trader can compare them at a glance.
 
 `tabular-nums` is a font setting that makes every digit the same width, so columns of numbers line up like a ledger.
+
+Table: each row is something that makes a table hard to read, and what to do about it.
 
 | Concern | What to do |
 | --- | --- |
@@ -270,12 +305,26 @@ export const matchPosition: FilterFn<PositionRow> = (row, _columnId, value) => {
 >   If the whole app says `minSize: 200`, a column asking for 80px still gets 200px until it sets its own `minSize`.
 > - A sticky row (`position: sticky`) does not carry its background colour, so rows scroll visibly behind the header text. Colour each header cell instead.
 
-![TanStack resolves width as min(max(minSize, size), maxSize), so a column with size 80 and a default minSize of 200 renders at 200px until it sets its own minSize.](images/01-data-table-basics/column-width-resolution.png)
+![TanStack resolves width as min(max(minSize, size), maxSize), so a column with size 80 and a default minSize of 200 renders at 200px until it sets its own minSize.](images/01-data-table-basics/column-width-resolution.png "Why a column asking for 80px is still 200px wide: the app-wide minimum wins until the column sets its own.")
 
 > [!WIN]
 > The finished table filters, sorts and pages in the right order, goes back to page 1 whenever it should, keeps its columns stable, and is comfortable to read for a whole trading day.
 
-![The finished Positions blotter: muted headers, right-aligned tabular numerics, green and red PnL, an em-dash for a missing day change](images/01-data-table-basics/table-default.png)
+![The finished Positions blotter: muted headers, right-aligned tabular numerics, green and red PnL, an em-dash for a missing day change](images/01-data-table-basics/table-default.png "The finished table: quiet headers, lined-up numbers, green and red profit, and a dash for missing values.")
+
+> [!RECAP]
+> - Right-align numbers with tabular-nums; keep headers small and quiet.
+> - Narrow columns need their own minSize.
+> - Show empty values, no results and loading states on purpose.
+
+## Summary
+
+> [!SUMMARY]
+> - A table is a pipeline: filter, sort, then page. Get the order right and most bugs disappear.
+> - Go back to page 1 whenever the search, filters or sort change - in the same handler.
+> - Keep column definitions stable, and identify rows by their real id with getRowId.
+> - Each TanStack feature is one row model plus one piece of state you control.
+> - Style for reading: small headers, right-aligned tabular numbers, deliberate empty and loading states.
 
 ```quiz
 [
@@ -451,6 +500,57 @@ export const matchPosition: FilterFn<PositionRow> = (row, _columnId, value) => {
     ],
     "answer": 3,
     "expl": "A hardcoded colSpan no longer matches the visible column count, so the cell extends past the header. Spanning getVisibleLeafColumns().length keeps it correct."
+  }
+]
+```
+
+```related
+[
+  {
+    "title": "Data Table",
+    "url": "https://www.greatfrontend.com/questions/user-interface/data-table",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "difficulty": "Medium",
+    "note": "Build a user table with pagination in React - the interview version of section 2."
+  },
+  {
+    "title": "Data Table II",
+    "url": "https://www.greatfrontend.com/questions/user-interface/data-table-ii",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "difficulty": "Medium",
+    "note": "Add column sorting to the same table."
+  },
+  {
+    "title": "Data Table III",
+    "url": "https://www.greatfrontend.com/questions/user-interface/data-table-iii",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "difficulty": "Hard",
+    "note": "Make it generic: any columns, pagination and sorting."
+  },
+  {
+    "title": "Data Table IV",
+    "url": "https://www.greatfrontend.com/questions/user-interface/data-table-iv",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "difficulty": "Hard",
+    "note": "Add filtering on top - the full pipeline from this doc."
+  },
+  {
+    "title": "Row models",
+    "url": "https://tanstack.com/table/latest/docs/guide/row-models",
+    "source": "TanStack Table docs",
+    "kind": "read",
+    "note": "How TanStack chains filter, sort and page internally."
+  },
+  {
+    "title": "Sorting guide",
+    "url": "https://tanstack.com/table/v8/docs/guide/sorting",
+    "source": "TanStack Table docs",
+    "kind": "read",
+    "note": "sortingFn, sortUndefined and multi-sort in detail."
   }
 ]
 ```

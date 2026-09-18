@@ -24,7 +24,9 @@ minutes: 15
 > A pointer cursor is a promise that clicking does something useful.
 > A row click can mean four different things, and people only learn one per table - so choose by what the user wants to do **next**.
 
-![Flow from a row click through two questions, keep the list in view and how deep is the work, to expando, side drawer, master-detail or a detail page](images/06-row-click-ux/row-click-decision.png)
+![Flow from a row click through two questions, keep the list in view and how deep is the work, to expando, side drawer, master-detail or a detail page](images/06-row-click-ux/row-click-decision.png "Two questions pick the pattern: does the list stay in view, and how deep is the work?")
+
+Table: find what the user wants to do after clicking; the left column is the pattern to use.
 
 | Option | Use it when the user wants to... | Their next step |
 | --- | --- | --- |
@@ -37,12 +39,16 @@ minutes: 15
 > - Write the choice down as a TypeScript type with one option per table. A type forces you to pick one.
 > - Only show a pointer cursor when a click actually does something.
 
+> [!RECAP]
+> - Choose the row click by what the user does next.
+> - Only show a pointer cursor when a click really does something.
+
 ## One click handler, with three guards
 
 > [!TLDR]
 > The shared table owns the click handler, and it ignores three kinds of click: one that ends a text selection, one on a button or link inside the row, and one inside a menu the row opened.
 
-![Three guards in order, portal check, interactive child, ended a text selection, each of which stops the click before the row action fires](images/06-row-click-ux/row-click-guards.png)
+![Three guards in order, portal check, interactive child, ended a text selection, each of which stops the click before the row action fires](images/06-row-click-ux/row-click-guards.png "Three checks run before a row click counts: inside a menu, on a button or link, or the end of a text selection.")
 
 ```ts
 const handleRowClick = (event: MouseEvent<HTMLTableRowElement>, row: Row<TData>) => {
@@ -67,6 +73,10 @@ const handleRowClick = (event: MouseEvent<HTMLTableRowElement>, row: Row<TData>)
 > Forget it once and ticking a checkbox also opens the drawer.
 > Put the guard in the shared table, then delete every hand-written click-stopper from your cells.
 
+> [!RECAP]
+> - One handler in the shared table, with three guards: text selection, inner controls, menus.
+> - Delete hand-written click stoppers from cells.
+
 ## Expando: peek at child rows
 
 > [!TLDR]
@@ -82,7 +92,11 @@ const handleRowClick = (event: MouseEvent<HTMLTableRowElement>, row: Row<TData>)
 > - The click guard recognises the arrow button, so clicking it does not open and close in one go.
 > - `aria-expanded` (which tells screen readers "open" or "closed") goes on the arrow button, not the row.
 
-![Orders blotter with ORD-118001 expanded, showing the nested fills table on a muted background and the rotated chevron; the working order below it has no chevron](images/06-row-click-ux/expando-open.png)
+![Orders blotter with ORD-118001 expanded, showing the nested fills table on a muted background and the rotated chevron; the working order below it has no chevron](images/06-row-click-ux/expando-open.png "An order opened in place, showing its fills underneath. Rows with nothing to show have no arrow.")
+
+> [!RECAP]
+> - Only rows with children get an arrow.
+> - Keep one row open at a time, and give the arrow a real button.
 
 ## Side drawer: keep the open row in the URL
 
@@ -108,7 +122,11 @@ const open = (id: string) =>
 > [!INTERVIEW]
 > - *Why add Previous and Next buttons to the drawer?* The drawer covers the list, so without them walking the list means close, click, close, click.
 
-![After pressing Next the drawer shows POS-00004, the highlight has moved to that row, and the location caption reads ?position=POS-00004](images/06-row-click-ux/drawer-url-param.png)
+![After pressing Next the drawer shows POS-00004, the highlight has moved to that row, and the location caption reads ?position=POS-00004](images/06-row-click-ux/drawer-url-param.png "After pressing Next, the drawer shows the next record, the highlight moves, and the URL changes with it.")
+
+> [!RECAP]
+> - Put the open record in the URL, with replace and preventScrollReset.
+> - Add Previous and Next so people can walk the list.
 
 ## Detail page: a real link first
 
@@ -121,7 +139,11 @@ const open = (id: string) =>
 > - Clicking the link does not also trigger the row, because the guard ignores links.
 > - Back returns to the exact same list only because the filters and page live in the URL (part 2).
 
-![Order detail page for a rejected order: a back link to Orders, the status badge, a rejection alert, the order facts card and an empty fills card](images/06-row-click-ux/detail-page.png)
+![Order detail page for a rejected order: a back link to Orders, the status badge, a rejection alert, the order facts card and an empty fills card](images/06-row-click-ux/detail-page.png "The detail page for a rejected order, with a back link to the list.")
+
+> [!RECAP]
+> - A row that navigates still needs a real link in its first cell.
+> - Back works because the list state lives in the URL.
 
 ## Single click and double click
 
@@ -129,7 +151,7 @@ const open = (id: string) =>
 > If one click selects and a double click opens, you can act instantly.
 > If both open something, every single click has to wait to see whether a second is coming.
 
-![Two timelines: Pattern A selects the row at 0 ms, Pattern B parks the click in a 220 ms timer before the drawer opens](images/06-row-click-ux/single-vs-double-click.png)
+![Two timelines: Pattern A selects the row at 0 ms, Pattern B parks the click in a 220 ms timer before the drawer opens](images/06-row-click-ux/single-vs-double-click.png "Top: select happens instantly. Bottom: the click waits 220ms in case a second one comes.")
 
 > [!STEPS]
 > 1. **Click selects, double click opens.** A double click sends two clicks first; ignore the second one (`event.detail > 1`) so it does not un-select.
@@ -139,6 +161,10 @@ const open = (id: string) =>
 > [!NUANCE]
 > - Double click is hard to discover and does not exist on touch screens.
 > - Prefer the first pattern, or no double click at all.
+
+> [!RECAP]
+> - If one click selects, ignore the second click of a double click.
+> - If both clicks open something, every click waits - avoid it.
 
 ## Keyboard, master-detail and styling
 
@@ -151,6 +177,8 @@ const open = (id: string) =>
 > - Master-detail: one `?sel=` param in the URL is the whole state. If it is missing, choose the first row while drawing, rather than writing it into the URL afterwards, which causes a flash of an empty panel.
 > - The end goal is one prop per table, like `rowAction={{ single: "select", double: "navigate" }}`, so the table handles the mechanics and nobody reinvents them.
 
+Table: each row is a small styling choice and the reason for it.
+
 | Style | Why |
 | --- | --- |
 | Hover lighter than selected | The open row stays obvious while the mouse moves |
@@ -160,6 +188,19 @@ const open = (id: string) =>
 
 > [!WIN]
 > One guarded click handler in the shared table, the open record in the URL, real links for real navigation, and one clear setting per table.
+
+> [!RECAP]
+> - Clickable rows need tabIndex, Enter and a visible focus ring.
+> - One rowAction setting per table keeps behaviour consistent.
+
+## Summary
+
+> [!SUMMARY]
+> - Pick expando, drawer, page or master-detail by the user's next step.
+> - Guard the row click once in the shared table.
+> - Keep whatever a click opens in the URL.
+> - A row that navigates needs a real link; a clickable row needs keyboard support.
+> - Avoid double click where you can.
 
 ```quiz
 [
@@ -335,6 +376,39 @@ const open = (id: string) =>
     ],
     "answer": 1,
     "expl": "A box-shadow occupies no layout space, so nothing moves. A transparent border on every row works but costs width everywhere."
+  }
+]
+```
+
+```related
+[
+  {
+    "title": "Expanding guide",
+    "url": "https://tanstack.com/table/v8/docs/guide/expanding",
+    "source": "TanStack Table docs",
+    "kind": "read",
+    "note": "getRowCanExpand, expanded state and sub-rows."
+  },
+  {
+    "title": "Accordion",
+    "url": "https://www.greatfrontend.com/questions/user-interface/accordion",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "note": "Open-one-at-a-time panels with proper keyboard support - the expando pattern."
+  },
+  {
+    "title": "Modal Dialog",
+    "url": "https://www.greatfrontend.com/questions/user-interface/modal-dialog",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "note": "Focus handling and closing rules that also apply to a side drawer."
+  },
+  {
+    "title": "Tables pattern",
+    "url": "https://www.w3.org/WAI/ARIA/apg/patterns/table/",
+    "source": "W3C ARIA guide",
+    "kind": "read",
+    "note": "What keyboard and screen-reader users expect from a table."
   }
 ]
 ```

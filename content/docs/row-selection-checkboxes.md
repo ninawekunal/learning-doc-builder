@@ -28,6 +28,8 @@ Our example is the trade orders table from part 2.
 Traders want to tick rows and press "Cancel orders", "Reassign trader" or "Export selected".
 Only orders that are still `working` or `partially_filled` can be cancelled - and that one rule shapes half the design.
 
+Table: each row is a selection bug, when you would notice it, and the fix covered below.
+
 | Problem | When you notice it | Fix |
 | --- | --- | --- |
 | The tick jumps to another row | After a sort, refresh or page change | Give TanStack the real row id |
@@ -36,13 +38,17 @@ Only orders that are still `working` or `partially_filled` can be cancelled - an
 | The count resets on page 2 | Server pagination | Count from the tick list, not the page |
 | The bar is stuck on "0 selected" | After turning on React Compiler | Opt that component out, or pass plain values |
 
+> [!RECAP]
+> - Remember ticks by the row id, not its position.
+> - Most selection bugs appear after a sort, a refresh or a page change.
+
 ## The checkbox column, and a bigger target
 
 > [!TLDR]
 > The checkbox sits inside a wrapper that fills the whole cell and stops the click there.
 > A near miss then does nothing, instead of opening the order.
 
-![Two copies of the same row: with the handler on the checkbox a near-miss click bubbles to TableRow and opens the detail, with the handler on a cell-filling wrapper both clicks stop there](images/04-row-selection-checkboxes/select-cell-click-path.png)
+![Two copies of the same row: with the handler on the checkbox a near-miss click bubbles to TableRow and opens the detail, with the handler on a cell-filling wrapper both clicks stop there](images/04-row-selection-checkboxes/select-cell-click-path.png "Top: a near miss lands on the cell and opens the order. Bottom: a cell-wide wrapper catches the click and nothing opens.")
 
 A 16px checkbox inside a clickable row is a trap.
 Miss it by two pixels and the click lands on the cell's padding, bubbles up to the row, and opens the order.
@@ -65,6 +71,10 @@ export const SelectCell = ({ row }: SelectCellProps) => (
 > - `-m-2 p-2` pulls the wrapper out to the cell's edges and puts the spacing back inside it.
 > - Name the order in each label, so a screen reader says "Select order ORD-118204", not "checkbox, checkbox, checkbox".
 > - Fix the column at 40px and switch off sorting and hiding for it.
+
+> [!RECAP]
+> - Wrap the checkbox in a cell-filling element that stops the click.
+> - Name the row in each checkbox label for screen readers.
 
 ## Remember ticks by id, not position
 
@@ -89,6 +99,10 @@ Now the tick list says `{ "ORD-118204": true }`, which means the same order on e
 > - *When do you hold the tick list yourself?* When something outside the table needs it, like a side panel or ticks loaded from the URL.
 > - *Does every list need TanStack for this?* No. For a simple list, a small hook around a JavaScript `Set` of ids is simpler.
 
+> [!RECAP]
+> - Without getRowId, a tick follows whatever row is now in that position.
+> - Hold the tick list yourself only when something outside the table needs it.
+
 ## Rows you cannot tick
 
 > [!TLDR]
@@ -107,7 +121,11 @@ useReactTable({ enableRowSelection: (row) => isCancellable(row.original) });
 > - A disabled button ignores the mouse completely, so a tooltip placed on it never opens. Put the tooltip on a `span` wrapped around it.
 > - The "tick all" checkbox in the header only counts rows that can be ticked.
 
-![A filled order row with a greyed-out checkbox and the tooltip "Order is filled and cannot be cancelled"](images/04-row-selection-checkboxes/disabled-row-tooltip.png)
+![A filled order row with a greyed-out checkbox and the tooltip "Order is filled and cannot be cancelled"](images/04-row-selection-checkboxes/disabled-row-tooltip.png "A filled order has a greyed checkbox, and hovering it explains why it cannot be cancelled.")
+
+> [!RECAP]
+> - enableRowSelection decides which rows can be ticked.
+> - A refused row shows a greyed checkbox and a tooltip on a wrapping span.
 
 ## The bulk action bar
 
@@ -126,7 +144,12 @@ useReactTable({ enableRowSelection: (row) => isCancellable(row.original) });
 > - A button that quietly skips some of the ticked rows is worse than no button.
 > - The bar swaps in for the search box in a slot of fixed height. If it pushed the table down, the trader's next click would land on a different row.
 
-![The bulk bar showing 3 selected with Cancel orders, Reassign trader, Export selected and Clear, and the confirm dialog open over the table](images/04-row-selection-checkboxes/cancel-confirm-dialog.png)
+![The bulk bar showing 3 selected with Cancel orders, Reassign trader, Export selected and Clear, and the confirm dialog open over the table](images/04-row-selection-checkboxes/cancel-confirm-dialog.png "Three rows ticked, the action bar showing, and a confirm dialog before cancelling.")
+
+> [!RECAP]
+> - Show an action only when it works for every ticked row.
+> - Confirm destructive actions, and clear ticks only after success.
+> - The server re-checks; the browser check is a courtesy.
 
 ## Ticks across pages
 
@@ -134,7 +157,7 @@ useReactTable({ enableRowSelection: (row) => isCancellable(row.original) });
 > When the server does the paging, the table only holds the current page.
 > TanStack's "selected rows" helper can only see that page, so count from the tick list itself.
 
-![Three orders ticked on page 1, then page 2 loaded: getSelectedRowModel returns 0 rows because it only sees the page, while the id-keyed rowSelection map still returns 3 ids](images/04-row-selection-checkboxes/page-scoped-vs-id-keyed-selection.png)
+![Three orders ticked on page 1, then page 2 loaded: getSelectedRowModel returns 0 rows because it only sees the page, while the id-keyed rowSelection map still returns 3 ids](images/04-row-selection-checkboxes/page-scoped-vs-id-keyed-selection.png "After moving to page 2, the page-based helper sees 0 ticked rows while the id list still holds 3.")
 
 ```ts
 export const getSelectedIds = (selection: RowSelectionState): string[] =>
@@ -148,6 +171,10 @@ const selectedIds = getSelectedIds(table.getState().rowSelection);
 > - An id tells you *which* rows, not *what is in them*. Either send the ids to the server, or remember each row as its page loads.
 > - That memory can decide what to **show**, never what is **allowed**. An id you never loaded means "do not offer the action".
 > - "Select all 1,204 matching" should send the filter plus the rows to leave out, not 1,204 ids.
+
+> [!RECAP]
+> - With server paging, count from the tick list, not the selected-rows helper.
+> - What you remember about unseen rows can hide actions, never allow them.
 
 ## Search, tabs and export
 
@@ -163,7 +190,12 @@ const selectedIds = getSelectedIds(table.getState().rowSelection);
 > - "Export selected" sends the ids, and the server ignores the current search. Otherwise a row ticked under an earlier search gets filtered out, and the trader gets eleven rows after ticking twelve.
 > - Shift-click to tick a range: remember the last clicked **id**, not its index, because the index goes stale after a sort.
 
-![Page 2 of the blotter with no ticked rows visible, the bar reading "3 selected - 3 not on this page" and the footer reading "3 of 300 row(s) selected"](images/04-row-selection-checkboxes/cross-page-count.png)
+![Page 2 of the blotter with no ticked rows visible, the bar reading "3 selected - 3 not on this page" and the footer reading "3 of 300 row(s) selected"](images/04-row-selection-checkboxes/cross-page-count.png "On page 2 no ticks are visible, but the bar honestly says 3 selected, 3 not on this page.")
+
+> [!RECAP]
+> - Keep ticks through a search only if you say how many are hidden.
+> - Clear ticks when the available actions change.
+> - Export exactly the ticked rows.
 
 ## React Compiler and the stuck "0 selected"
 
@@ -172,7 +204,7 @@ const selectedIds = getSelectedIds(table.getState().rowSelection);
 > React Compiler sees the same input and reuses the old drawing forever.
 > Opt such components out with `"use no memo"`, or pass them plain values instead.
 
-![React Compiler caches the bulk bar on the first render with the table prop, then on the next render sees the same table reference and reuses the cached "0 selected" while three rows are ticked](images/04-row-selection-checkboxes/react-compiler-frozen-bulk-bar.png)
+![React Compiler caches the bulk bar on the first render with the table prop, then on the next render sees the same table reference and reuses the cached "0 selected" while three rows are ticked](images/04-row-selection-checkboxes/react-compiler-frozen-bulk-bar.png "The compiler reuses its first drawing of the bar ('0 selected') because the table object never looks new.")
 
 ```tsx
 export const OrdersBulkBar = ({ table }: OrdersBulkBarProps) => {
@@ -196,6 +228,19 @@ export const OrdersBulkBar = ({ table }: OrdersBulkBarProps) => {
 
 > [!WIN]
 > Ticks tied to real ids, honest counts on every page, refused rows that explain themselves, and a bar that survives a compiler upgrade.
+
+> [!RECAP]
+> - React Compiler caches components that receive the unchanging table object.
+> - Opt each such component out with "use no memo", or pass plain values.
+
+## Summary
+
+> [!SUMMARY]
+> - Pass getRowId so every tick belongs to a real row, not a position.
+> - Make the whole cell the checkbox target, and explain rows that cannot be ticked.
+> - Only offer actions that work for every ticked row; clear ticks only on success.
+> - Under server paging, read the tick list itself for counts and actions.
+> - With React Compiler, opt components that read the table out of memoisation, or pass plain values.
 
 ```quiz
 [
@@ -371,6 +416,40 @@ export const OrdersBulkBar = ({ table }: OrdersBulkBarProps) => {
     ],
     "answer": 2,
     "expl": "'Cancel' could mean cancel the orders or cancel the dialog. 'Keep orders' makes the dismiss unambiguous."
+  }
+]
+```
+
+```related
+[
+  {
+    "title": "Row selection guide",
+    "url": "https://tanstack.com/table/v8/docs/guide/row-selection",
+    "source": "TanStack Table docs",
+    "kind": "read",
+    "note": "rowSelection state, enableRowSelection and the selected row models."
+  },
+  {
+    "title": "React Compiler",
+    "url": "https://react.dev/learn/react-compiler",
+    "source": "React docs",
+    "kind": "read",
+    "note": "What the compiler memoises, and how \"use no memo\" opts a component out."
+  },
+  {
+    "title": "Transfer List",
+    "url": "https://www.greatfrontend.com/questions/user-interface/transfer-list",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "note": "Checkbox selection that moves items between lists - the same id-keyed thinking."
+  },
+  {
+    "title": "Data Table III",
+    "url": "https://www.greatfrontend.com/questions/user-interface/data-table-iii",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "difficulty": "Hard",
+    "note": "Add a checkbox column and make ticks survive sorting and paging."
   }
 ]
 ```

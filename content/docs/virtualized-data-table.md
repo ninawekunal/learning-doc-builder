@@ -33,9 +33,11 @@ The first version put all 50,000 rows in the DOM, and the browser tab froze.
 > Virtualization is a train window.
 > The landscape is miles long, but you only ever see one window's worth, and the scenery outside it does not need to exist until you reach it.
 
-![A decision flow: a paginated list stops at pagination, light rows or a searched list get a render cap, and only an un-paginated list of heavy rows that people scroll through gets virtualized](images/03-virtualized-data-table/virtualize-decision.png)
+![A decision flow: a paginated list stops at pagination, light rows or a searched list get a render cap, and only an un-paginated list of heavy rows that people scroll through gets virtualized](images/03-virtualized-data-table/virtualize-decision.png "A decision flow: paged lists stop at paging, light rows get a Show more cap, only long un-paged lists of heavy rows get virtualized.")
 
 Ask three questions before you virtualize:
+
+Table: answer each question for your list; any "no" points to a simpler fix than virtualizing.
 
 | Question | If the answer is "no" |
 | --- | --- |
@@ -45,6 +47,10 @@ Ask three questions before you virtualize:
 
 Only three "yes" answers earn a virtualizer.
 Plenty of production table systems never virtualize at all, on purpose, because every table pages.
+
+> [!RECAP]
+> - Virtualize only when the list is un-paged, the rows are heavy, and people scroll it continuously.
+> - Most slow tables are fixed by paging or a Show more button.
 
 ## Measure before you fix
 
@@ -62,7 +68,11 @@ Plenty of production table systems never virtualize at all, on purpose, because 
 > - A classic trigger: a 500-line list that, when someone picked "All", mounted 500 rows **and 500 dropdown menus** at once.
 > - Heavy off-screen DOM slows the whole page, not just scrolling. Twenty heavy pages kept mounted made every layout pass about 12x slower (roughly 40ms instead of 3ms).
 
-![The finished Executions tape at the top of the day, with the toolbar reading Mounted rows: 25 of 50,000](images/03-virtualized-data-table/tape-top.png)
+![The finished Executions tape at the top of the day, with the toolbar reading Mounted rows: 25 of 50,000](images/03-virtualized-data-table/tape-top.png "The executions table at the start of the day. The counter shows only 25 of 50,000 rows exist in the page.")
+
+> [!RECAP]
+> - Count real rows in the DOM and time a render before changing anything.
+> - Heavy off-screen DOM slows the whole page, not only scrolling.
 
 ## The cheaper fixes that usually win
 
@@ -83,7 +93,11 @@ const [visibleCount, setVisibleCount] = useState(20);
 > - Make it `sticky bottom-0` inside the scroll box, so it is always reachable.
 > - Choosing "no virtualizer" for a 455-row feed is a good decision, not a lazy one. Hand-built virtualizers are a known maintenance headache.
 
-![The recent fills panel after one click: 40 of 2,676 rows mounted, with the sticky Show 20 more button at the bottom of the box](images/03-virtualized-data-table/render-cap-tab.png)
+![The recent fills panel after one click: 40 of 2,676 rows mounted, with the sticky Show 20 more button at the bottom of the box](images/03-virtualized-data-table/render-cap-tab.png "After one click on Show 20 more: 40 rows exist, and the button stays stuck to the bottom of the box.")
+
+> [!RECAP]
+> - Rows in memory are cheap; rows in the DOM are not.
+> - A Show more button that just raises a number often wins.
 
 ## Virtualizing a table: two spacer rows
 
@@ -91,7 +105,7 @@ const [visibleCount, setVisibleCount] = useState(20);
 > Mount only the visible rows, and put one empty "spacer" row above them and one below them, each as tall as the rows it stands in for.
 > The scrollbar then behaves as if every row were there.
 
-![The scroll box holds a sticky header, a tall empty spacer row, the 25 mounted rows, and a second spacer row below them, so the scrollbar reads as 50,000 rows while only 25 exist](images/03-virtualized-data-table/windowed-body-spacer-rows.png)
+![The scroll box holds a sticky header, a tall empty spacer row, the 25 mounted rows, and a second spacer row below them, so the scrollbar reads as 50,000 rows while only 25 exist](images/03-virtualized-data-table/windowed-body-spacer-rows.png "One tall empty row above, the 25 real rows, one tall empty row below - so the scrollbar acts as if all rows were there.")
 
 ```ts
 const items = virtualizer.getVirtualItems(); // the rows in view, plus overscan
@@ -114,13 +128,18 @@ The gap before the first one and after the last one become the two spacers.
 >   In a table, an absolutely positioned row leaves the table's layout, so its cells stop lining up with the header.
 > - Work out the visible window straight from the scroll position. Tools that report visibility *later* (after the frame) show blank rows during fast scrolls. Blank-but-fast is worse than slow.
 
+> [!RECAP]
+> - Two spacer rows stand in for everything above and below the visible window.
+> - Spacer rows keep the table layout, so body and header columns line up.
+> - Compute the window from the scroll position, synchronously.
+
 ## The scroll box must be state, not a ref
 
 > [!TLDR]
 > If the virtualizer lives in a child component, hand it the scroll box through **state**, not a ref.
 > Otherwise the first render shows an empty table.
 
-![Two timelines side by side: with a ref, the child's layout effect runs before the parent's ref attaches and the body stays empty; with state, the setter runs as the ref, the parent re-renders, and the child attaches to a real element](images/03-virtualized-data-table/scroll-element-ref-vs-state.png)
+![Two timelines side by side: with a ref, the child's layout effect runs before the parent's ref attaches and the body stays empty; with state, the setter runs as the ref, the parent re-renders, and the child attaches to a real element](images/03-virtualized-data-table/scroll-element-ref-vs-state.png "Left, with a ref: the child looks too early and finds nothing. Right, with state: the parent re-renders and the child gets the real box.")
 
 ```tsx
 const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
@@ -144,6 +163,10 @@ useVirtualizer({
 > [!INTERVIEW]
 > - *Why `initialRect`?* Until it has measured anything, the virtualizer assumes the box is 0px tall and shows nothing - including in the server-rendered HTML.
 
+> [!RECAP]
+> - Give a child virtualizer the scroll box through state, not a ref.
+> - Pass initialRect so the first render shows rows.
+
 ## Rows of different heights, and stopping extra re-draws
 
 > [!TLDR]
@@ -160,7 +183,12 @@ useVirtualizer({
 > - Tell the virtualizer about the sticky header (`scrollPaddingEnd`), or "scroll to row" hides the row under it.
 > - When no filter is active, return the **same** array rather than a filtered copy, so the virtualizer does not recalculate everything.
 
-![Row 5 expanded: the order panel shows the parent order, a note field and a flag button, and the footer reads Row 5 open](images/03-virtualized-data-table/row-expanded.png)
+![Row 5 expanded: the order panel shows the parent order, a note field and a flag button, and the footer reads Row 5 open](images/03-virtualized-data-table/row-expanded.png "Row 5 opened: its parent order, a note field and a flag button appear underneath.")
+
+> [!RECAP]
+> - Let the virtualizer measure each row; your size is only a starting guess.
+> - Keep open and edited state in the parent.
+> - Compare row inputs field by field, and pass one stable handler.
 
 ## Finding rows, and testing
 
@@ -173,6 +201,8 @@ useVirtualizer({
 > - The row needs `tabIndex={-1}` so you can move keyboard focus to it.
 > - jsdom reports every size as 0. Fake `offsetHeight`, `scrollHeight` and `clientHeight`, and add `scrollTo`, which jsdom lacks. Then assert that *some* rows mount and *most* do not.
 
+Table: each row is a styling need of a windowed table and why it matters.
+
 | Styling need | Why |
 | --- | --- |
 | `table-fixed` with set header widths | Otherwise the browser sizes columns from whichever rows happen to be mounted, and they jump while scrolling |
@@ -183,7 +213,20 @@ useVirtualizer({
 > [!WIN]
 > 50,000 fills, about 35 rows in the DOM at any moment, columns that stay still, and a test that fails if anyone brings the empty-table bug back.
 
-![The finished Executions tape: sticky muted header, buy and sell badges, row numbers, a flagged fill with its order panel open and a note typed, and a footer strip reading Showing 50,000 fills](images/03-virtualized-data-table/tape-finished.png)
+![The finished Executions tape: sticky muted header, buy and sell badges, row numbers, a flagged fill with its order panel open and a note typed, and a footer strip reading Showing 50,000 fills](images/03-virtualized-data-table/tape-finished.png "The finished table: sticky header, buy and sell badges, row numbers, and one flagged fill with a note.")
+
+> [!RECAP]
+> - Find rows by a data- id, never by their position in the DOM.
+> - Fake sizes and scrollTo in jsdom, then test that some rows mount and most do not.
+
+## Summary
+
+> [!SUMMARY]
+> - Measure first; reach for virtualization only after paging and a render cap fall short.
+> - In a table, window with two spacer rows so header and body stay aligned.
+> - Hand a child virtualizer the scroll box as state, and give it an initialRect.
+> - Rows mount and unmount as you scroll: keep their state in the parent and address them by id.
+> - Test in jsdom with faked sizes, asserting that some rows mount and most do not.
 
 ```quiz
 [
@@ -359,6 +402,47 @@ useVirtualizer({
     ],
     "answer": 3,
     "expl": "Before measuring, the virtualizer assumes a 0px viewport and returns no items. initialRect seeds a size so even the server HTML has a first window."
+  }
+]
+```
+
+```related
+[
+  {
+    "title": "TanStack Virtual",
+    "url": "https://tanstack.com/virtual/latest/docs/introduction",
+    "source": "TanStack Virtual docs",
+    "kind": "read",
+    "note": "The library behind useVirtualizer, measureElement and scrollToIndex."
+  },
+  {
+    "title": "Virtualization guide",
+    "url": "https://tanstack.com/table/v8/docs/guide/virtualization",
+    "source": "TanStack Table docs",
+    "kind": "read",
+    "note": "How TanStack Table pairs with TanStack Virtual."
+  },
+  {
+    "title": "Manipulating the DOM with refs",
+    "url": "https://react.dev/learn/manipulating-the-dom-with-refs",
+    "source": "React docs",
+    "kind": "read",
+    "note": "When refs are attached, and why writing to one never re-renders."
+  },
+  {
+    "title": "memo",
+    "url": "https://react.dev/reference/react/memo",
+    "source": "React docs",
+    "kind": "read",
+    "note": "Custom comparison functions, used here to stop every row re-drawing."
+  },
+  {
+    "title": "Data Table III",
+    "url": "https://www.greatfrontend.com/questions/user-interface/data-table-iii",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "difficulty": "Hard",
+    "note": "Build a generic table first - then try windowing it with 10,000 rows."
   }
 ]
 ```

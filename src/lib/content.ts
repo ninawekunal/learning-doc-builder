@@ -1,27 +1,28 @@
 import { parseFrontmatter } from '@/lib/frontmatter'
+import type { RelatedLink } from '@/lib/md/types'
 import type { ContentEntry, ContentKind, QuizItem } from '@/lib/types'
 
 const docFiles = import.meta.glob('/content/docs/*.md', { query: '?raw', import: 'default', eager: true })
 const blogFiles = import.meta.glob('/content/blog/*.md', { query: '?raw', import: 'default', eager: true })
 
-/** Pulls the ```quiz fenced block out of the prose and parses it. */
-const extractQuiz = (body: string): { body: string; quiz: QuizItem[] } => {
-  const match = body.match(/```quiz\r?\n([\s\S]*?)```/)
+/** Pulls a fenced JSON block (```quiz, ```related) out of the prose and parses it. */
+const extractFence = <T,>(body: string, lang: string): { body: string; items: T[] } => {
+  const match = body.match(new RegExp('```' + lang + '\\r?\\n([\\s\\S]*?)```'))
 
-  if (!match) return { body, quiz: [] }
+  if (!match) return { body, items: [] }
 
-  let quiz: QuizItem[] = []
+  let items: T[] = []
 
   try {
     const parsed: unknown = JSON.parse(match[1])
 
-    if (Array.isArray(parsed)) quiz = parsed as QuizItem[]
+    if (Array.isArray(parsed)) items = parsed as T[]
   } catch {
-    // A malformed quiz should not blank the doc. `pnpm check:content` catches it.
-    quiz = []
+    // A malformed block should not blank the doc. `pnpm check:content` catches it.
+    items = []
   }
 
-  return { body: body.replace(match[0], '').trim(), quiz }
+  return { body: body.replace(match[0], '').trim(), items }
 }
 
 const build = (
@@ -32,9 +33,10 @@ const build = (
     .map(([path, raw]) => {
       const slug = path.split('/').pop()!.replace(/\.md$/, '')
       const { meta, body } = parseFrontmatter(String(raw))
-      const extracted = extractQuiz(body)
+      const quiz = extractFence<QuizItem>(body, 'quiz')
+      const related = extractFence<RelatedLink>(quiz.body, 'related')
 
-      return { kind, slug, meta, body: extracted.body, quiz: extracted.quiz }
+      return { kind, slug, meta, body: related.body, quiz: quiz.items, related: related.items }
     })
     .filter((entry) => !entry.meta.draft)
     // Newest first; parts of one series published the same day stay in order.

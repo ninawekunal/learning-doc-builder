@@ -100,6 +100,85 @@ const checkQuiz = (file, source, isDoc) => {
   }
 }
 
+const RELATED_KINDS = ['practice', 'read', 'watch']
+
+const isProseLine = (line) => {
+  const text = line.replace(/^>\s?/, '').trim()
+
+  return /^[A-Za-z*_`"(]/.test(text) && !/^([-*]|\d+\.)\s/.test(text) && !text.startsWith('[!')
+}
+
+/** The house reading rules: recaps, a summary, captioned tables and images, glossary, links. */
+const checkReadability = (file, body) => {
+  const prose = body.split(/```quiz/)[0]
+  const sections = prose.split(/^(?=## )/m).filter((s) => s.startsWith('## '))
+
+  if (!/> \[!TERMS\]/.test(prose)) warn(file, 'no > [!TERMS] box (the floating Words-you-will-meet list is empty)')
+
+  const summary = sections.find((s) => /^## Summary\s*$/m.test(s))
+
+  if (!summary || !/> \[!SUMMARY\]/.test(summary)) fail(file, 'needs a closing "## Summary" section with a > [!SUMMARY] box')
+
+  for (const section of sections) {
+    const title = section.split('\n')[0].slice(3).trim()
+
+    if (title === 'Summary') continue
+    if (!/> \[!RECAP\]/.test(section)) fail(file, `section "${title}" has no > [!RECAP] box`)
+  }
+
+  const lines = prose.split('\n')
+  let inFence = false
+
+  lines.forEach((line, i) => {
+    if (/^(```|~~~)/.test(line)) {
+      inFence = !inFence
+
+      return
+    }
+    if (inFence) return
+
+    const prev = lines[i - 1] ?? ''
+
+    if (line.startsWith('|') && !prev.startsWith('|')) {
+      const before = lines.slice(Math.max(0, i - 2), i).join('\n')
+
+      if (!/^Table: .+/m.test(before)) fail(file, `table at line ${i + 1} has no "Table:" caption line above it`)
+    }
+
+    for (const m of line.matchAll(/!\[[^\]]*\]\((\S+?)(\s+"[^"]+")?\)/g)) {
+      if (!m[2]) fail(file, `image ${m[1]} has no "caption" title`)
+    }
+
+    // A prose line that stops mid-sentence and carries on below renders as a broken line.
+    const next = lines[i + 1] ?? ''
+    const text = line.replace(/^>\s?/, '').trim()
+    const nextText = next.replace(/^>\s?/, '').trim()
+
+    if (isProseLine(line) && isProseLine(next) && !/[.!?:;)"'`*]$/.test(text) && /^[a-z]/.test(nextText)) {
+      warn(file, `line ${i + 1} breaks mid-sentence; keep one sentence per line`)
+    }
+  })
+
+  const related = body.match(/```related\r?\n([\s\S]*?)```/)
+
+  if (!related) {
+    warn(file, 'no ```related block (practice and further reading)')
+
+    return
+  }
+
+  try {
+    const links = JSON.parse(related[1])
+
+    links.forEach((l, i) => {
+      for (const key of ['title', 'url', 'source', 'kind', 'note']) if (!l[key]) fail(file, `related[${i}] missing ${key}`)
+      if (l.kind && !RELATED_KINDS.includes(l.kind)) fail(file, `related[${i}] kind must be one of ${RELATED_KINDS.join(', ')}`)
+    })
+  } catch (error) {
+    fail(file, `related block is not valid JSON: ${error.message}`)
+  }
+}
+
 for (const dir of DIRS) {
   let files = []
 
@@ -142,12 +221,14 @@ for (const dir of DIRS) {
     if (gotchas > 1) warn(file, `${gotchas} gotcha callouts (spend it once)`)
 
     const badCallout = body.match(/> \[!([A-Z]+)\]/g)?.find(
-      (m) => !['TLDR', 'TERMS', 'ANALOGY', 'STEPS', 'NUANCE', 'INTERVIEW', 'GOTCHA', 'WIN'].includes(m.slice(4, -1)),
+      (m) => !['TLDR', 'TERMS', 'ANALOGY', 'STEPS', 'NUANCE', 'INTERVIEW', 'GOTCHA', 'WIN', 'RECAP', 'SUMMARY'].includes(m.slice(4, -1)),
     )
 
     if (badCallout) fail(file, `unknown callout ${badCallout}`)
 
-    if (source.includes('—')) fail(file, 'contains an em dash')
+    if (source.includes('\u2014')) fail(file, 'contains an em dash')
+
+    if (dir === 'content/docs') checkReadability(file, body)
 
     checkQuiz(file, source, dir === 'content/docs')
   }

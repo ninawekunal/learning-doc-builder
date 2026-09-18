@@ -33,13 +33,15 @@ Filtering in the browser cannot keep that promise.
 If the browser hides a row, the browser already has the row.
 So the filtering has to happen before the data leaves the server.
 
+Table: each row is a reason to move a table to the server, and what breaks if it stays in the browser.
+
 | Why move to the server | What goes wrong in the browser |
 | --- | --- |
 | Size | You cannot ship 50,000 rows on every visit |
 | Privacy | "Hidden" rows have already been downloaded |
 | Consistency | The table, the dropdowns and the export can each end up slightly different |
 
-![Three route files (list, filter options, CSV) each pointing down into one shared bff folder holding the per-user cache, the pure compute module and the zod schema, with the cache alone calling the upstream Trading API](images/02-ssr-bff-data-table/route-triple-one-pipeline.png)
+![Three route files (list, filter options, CSV) each pointing down into one shared bff folder holding the per-user cache, the pure compute module and the zod schema, with the cache alone calling the upstream Trading API](images/02-ssr-bff-data-table/route-triple-one-pipeline.png "Three small routes - list, filter options and CSV - all share one cache, one compute file and one schema.")
 
 > [!ANALOGY]
 > The real API is a warehouse.
@@ -53,12 +55,16 @@ Files ending in `.server.ts` never get sent to the browser, so secrets stay on t
 > Not every table needs this.
 > A small table on a detail page with nothing to compute is fine loading its rows directly and doing the work in the browser, like part 1.
 
+> [!RECAP]
+> - Move the table to the server when data is too big or too private to send whole.
+> - A BFF is a few extra routes in the same app: list, filter options and CSV.
+
 ## One request, six steps in a fixed order
 
 > [!TLDR]
 > Every list request does the same six things, always in the same order: check permission, read the query, get the data, compute the page, check its shape, send it back.
 
-![The list loader as six numbered steps inside a server box: permission check, per-user cache, upstream fetch on a miss, pure compute, zod parse, and a private no-store response back to the browser](images/02-ssr-bff-data-table/bff-loader-pipeline.png)
+![The list loader as six numbered steps inside a server box: permission check, per-user cache, upstream fetch on a miss, pure compute, zod parse, and a private no-store response back to the browser](images/02-ssr-bff-data-table/bff-loader-pipeline.png "What happens on every request, in order: check permission, get cached data, compute the page, check its shape, send it.")
 
 ```tsx
 export const loader = async ({ request }: Route.LoaderArgs) => {
@@ -84,6 +90,11 @@ The permission check returns a `Caller`: the user's id, their access token for t
 > [!INTERVIEW]
 > - *Why not accept the desk from the client?* Anything that decides what a user may see has to come from something they cannot edit: their token.
 
+> [!RECAP]
+> - Every request: permission, params, data, compute, shape check, response.
+> - The user's allowed desks come from their token, never the URL.
+> - BFF routes answer 401 or 403 - never a redirect to the login page.
+
 ## The pure compute step
 
 > [!TLDR]
@@ -104,6 +115,10 @@ That is what makes it easy to test: hand it rows, check what comes out.
 >   An API document saying "we support this filter" is not proof the API actually applies it.
 >   Re-checking costs a little bandwidth; skipping it can show a trader someone else's orders.
 > - Write that rule as the very first unit test, so deleting the scope step fails the build.
+
+> [!RECAP]
+> - Keep the table logic pure: no fetching, no clock, no request object.
+> - Re-apply the user scope yourself, even if the API claims it did.
 
 ## The per-user cache
 
@@ -140,6 +155,11 @@ If three requests arrive a few milliseconds apart, the second and third simply w
 > So after one person logs out, the next person to log in on that same laptop can briefly see the previous person's table.
 > Send `private, no-store` from every BFF route, and add a test that reads each route file and fails if `max-age` appears.
 
+> [!RECAP]
+> - Cache per user id for about 30 seconds, and cache the promise, not the value.
+> - Cap the API walk and read the real total separately.
+> - Send private, no-store so the browser never replays one user's data to the next.
+
 ## One shape, checked on both ends
 
 > [!TLDR]
@@ -154,6 +174,10 @@ If three requests arrive a few milliseconds apart, the second and third simply w
 > - An unknown tab is an error (400), because falling back would show the wrong rows under the right heading.
 >   A junk filter value just means "no filter", which the user can see.
 > - One function builds query strings for the list, the export link and the page URL, so they can never disagree.
+
+> [!RECAP]
+> - One zod schema, checked on the server before sending and in the browser on arrival.
+> - Unknown tabs are errors; junk filter values just mean no filter.
 
 ## The browser side: "manual mode" and the URL
 
@@ -172,7 +196,12 @@ If three requests arrive a few milliseconds apart, the second and third simply w
 > - Only allow sorts the server understands, by checking the column id against the server's list.
 > - Use a constant empty array for "no rows yet". `?? []` makes a new array every render, and TanStack treats that as new data.
 
-![The Trade orders blotter on the Working tab: tabs, search, three filter pickers, ten rows and a footer reading 1-10 of 198, Page 1 of 20](images/02-ssr-bff-data-table/working-tab-default.png)
+![The Trade orders blotter on the Working tab: tabs, search, three filter pickers, ten rows and a footer reading 1-10 of 198, Page 1 of 20](images/02-ssr-bff-data-table/working-tab-default.png "The orders table on the Working tab: tabs, search, three filters, ten rows and a page footer.")
+
+> [!RECAP]
+> - Tell TanStack the server already sorted, filtered and paged (the manual* flags).
+> - Keep every choice in the URL so views can be shared.
+> - Never turn a failed request into an empty list.
 
 ## Dropdown options, and reusable columns
 
@@ -180,7 +209,7 @@ If three requests arrive a few milliseconds apart, the second and third simply w
 > The filter dropdowns get their options from a separate route that looks at **all** of the user's data, not the filtered page.
 > Columns are small functions you mix and match per tab.
 
-![Side by side: deriving Symbol options from the filtered rows leaves a picker with only NVDA in it, while a second route that ignores the filters keeps every symbol available with NVDA checked](images/02-ssr-bff-data-table/filter-options-baseline.png)
+![Side by side: deriving Symbol options from the filtered rows leaves a picker with only NVDA in it, while a second route that ignores the filters keeps every symbol available with NVDA checked](images/02-ssr-bff-data-table/filter-options-baseline.png "Left: options from filtered rows leave only NVDA. Right: options from all data keep every symbol available.")
 
 Look at the left side of that picture.
 If the dropdown's options came from the filtered rows, picking "NVDA" would leave only "NVDA" in the list.
@@ -193,11 +222,17 @@ You could never pick a second symbol.
 > - JavaScript's `{ ...a, meta: {...} }` replaces `meta` completely rather than merging it. Spread the old meta back in, or labels vanish.
 > - Build the columns inside `useMemo` keyed by the tab, so switching unrelated state does not rebuild them.
 
+> [!RECAP]
+> - Dropdown options come from all of the user's data, not the filtered page.
+> - Object spread replaces nested objects; spread the old meta back in.
+
 ## First paint, hydration and CSV
 
 > [!TLDR]
 > You can pre-fill the first page on the server, or show placeholders and fetch after load.
 > Either way, every cell must print exactly the same text on the server and in the browser.
+
+Table: compare the two ways to show the first page: what you gain and what it costs.
 
 | Choice | Good | Cost |
 | --- | --- | --- |
@@ -215,7 +250,21 @@ You could never pick a second symbol.
 > [!WIN]
 > One pipeline, three routes, no drift: the table, the dropdowns and the export always agree, and no request can widen what its user is allowed to see.
 
-![Mid-refetch after clicking next page: page 1's rows are still on screen at 60% opacity while the footer already reads 11-20 of 198, Page 2 of 20](images/02-ssr-bff-data-table/page-2-refetching.png)
+![Mid-refetch after clicking next page: page 1's rows are still on screen at 60% opacity while the footer already reads 11-20 of 198, Page 2 of 20](images/02-ssr-bff-data-table/page-2-refetching.png "While page 2 loads, page 1 stays visible but dimmed, and the footer already shows the new range.")
+
+> [!RECAP]
+> - Pre-fill on the server only where people land cold on a list.
+> - Pin time zone, clock and locale so server and browser print the same text.
+> - CSV reuses the pipeline without paging, and never exports more than the view.
+
+## Summary
+
+> [!SUMMARY]
+> - Move a table behind a BFF when size or privacy means the browser should not hold all the rows.
+> - Every request runs the same six steps, with permission first and scope taken from the token.
+> - Keep the logic pure, cache per user, and forbid the browser from caching BFF answers.
+> - One schema checks the data on both ends; one serializer builds every URL.
+> - Pin formatting so server and browser agree, and keep the export identical to the view.
 
 ```quiz
 [
@@ -391,6 +440,54 @@ You could never pick a second symbol.
     ],
     "answer": 0,
     "expl": "Falling back to a default tab would show, say, all orders under a 'Filled' heading. A junk filter value is visible in the chips row and harms nothing."
+  }
+]
+```
+
+```related
+[
+  {
+    "title": "Client-side vs server-side",
+    "url": "https://tanstack.com/table/latest/docs/guide/client-side-vs-server-side",
+    "source": "TanStack Table docs",
+    "kind": "read",
+    "note": "When to hand sorting, filtering and paging to the server, and the manual* flags."
+  },
+  {
+    "title": "Resource routes",
+    "url": "https://reactrouter.com/how-to/resource-routes",
+    "source": "React Router docs",
+    "kind": "read",
+    "note": "Routes with a loader and no component - the building block of this BFF."
+  },
+  {
+    "title": "Data loading",
+    "url": "https://reactrouter.com/start/framework/data-loading",
+    "source": "React Router docs",
+    "kind": "read",
+    "note": "Server loaders, and how they feed the first render."
+  },
+  {
+    "title": "Cache-Control",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control",
+    "source": "MDN",
+    "kind": "read",
+    "note": "What private, no-store and max-age really tell the browser."
+  },
+  {
+    "title": "Zod",
+    "url": "https://zod.dev",
+    "source": "zod.dev",
+    "kind": "read",
+    "note": "The schema library used to check data on both ends."
+  },
+  {
+    "title": "Data Table IV",
+    "url": "https://www.greatfrontend.com/questions/user-interface/data-table-iv",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "difficulty": "Hard",
+    "note": "Build the full filter, sort, page pipeline - then imagine moving it to a server."
   }
 ]
 ```

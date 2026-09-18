@@ -1,21 +1,25 @@
 ---
 title: Use the skill
-summary: Install the learning-doc-builder skill, point it at a topic, and get a doc with a graded quiz in this repo.
-date: 2026-09-17
+summary: Install the learning-doc-builder skill, point it at a topic, and get an easy-to-read doc with a graded quiz and practice links.
+date: 2026-09-18
 tags: [skill, workflow]
 ---
 
 ## What the skill does
 
 > [!TLDR]
-> `learning-doc-builder` is a Claude skill. You give it a topic; it researches
-> the topic, writes one markdown file into `content/docs/`, and appends a graded
-> quiz to it. The React app in this repo renders that file.
+> `learning-doc-builder` is a Claude skill.
+> You give it a topic; it researches it, writes one markdown file into `content/docs/`, and adds a graded quiz and practice links.
+> The React app in this repo turns that file into the page you are reading.
 
-The skill does not write HTML and it does not write CSS. It writes **one markdown
-file in a fixed shape**. Everything visual - dark mode, bionic reading, the mobile
-section dropdown, the quiz engine - lives in the app, so changing the look of every
-doc you have ever written is a change in one stylesheet.
+The skill writes **one markdown file in a fixed shape**.
+It never writes HTML or CSS.
+Everything visual lives in the app: dark mode, bionic reading, the mobile section bar, collapsible boxes, code highlighting, the underlined glossary words and the quiz.
+So changing how every doc looks is a change in one place.
+
+> [!RECAP]
+> - The skill writes markdown; the app does all the visuals.
+> - One file per doc, in a fixed shape.
 
 ## Install it
 
@@ -25,103 +29,143 @@ Copy the skill folder into whichever skill directory your setup reads.
 # Claude Code, available in every project
 cp -R skill/learning-doc-builder ~/.claude/skills/
 
-# or scoped to one repo
+# or only for one repo
 cp -R skill/learning-doc-builder .claude/skills/
 ```
 
-Then confirm Claude can see it. In a session, `/learning-doc-builder` should
-resolve, and asking for "a learning doc about X" should trigger it without you
-naming it.
+Then ask for "a learning doc about X".
+The skill should trigger without you naming it.
 
 > [!NUANCE]
-> The skill's `description` field is what makes it fire on plain requests like
-> "explain how X works as a reading guide". If you rename the folder, keep the
-> description intact or the trigger phrases stop working.
+> The skill's `description` is what makes it fire on plain requests.
+> If you rename the folder, keep the description, or the trigger phrases stop working.
+
+> [!RECAP]
+> - Copy one folder into your skills directory.
+> - Plain requests like "make a learning doc about X" trigger it.
 
 ## Generate a doc
-
-Ask in plain language. The skill handles the rest.
 
 ```text
 Make a learning doc about how HTTP caching headers work.
 ```
 
-What it does, in order:
-
 > [!STEPS]
-> 1. **Locks the scope.** It asks at most one question, and only if the answer
->    changes the doc. Depth and angle, never trivia.
-> 2. **Researches before templating.** For a codebase topic it reads your actual
->    files and cites real paths. For a general topic it works from knowledge or
->    the web. A beautiful shell around wrong facts is worse than no doc.
-> 3. **Writes the markdown.** Six to nine `##` sections, each with the four
->    buckets: TL;DR, steps, nuances, interview must-know.
-> 4. **Writes the quiz.** Scenario questions in fresh situations, never a
->    sentence lifted from the doc. Two or three are select-all.
-> 5. **Validates.** Runs `pnpm check:content`, which fails on a malformed quiz,
->    a missing front matter field, or an answer index out of range.
+> 1. **Lock the scope.** At most one question, and only if the answer changes the doc.
+> 2. **Research first.** Real code and real sources before any writing.
+> 3. **Write the doc** in the teacher voice, in the shape below.
+> 4. **Write the quiz.** Scenario questions, never sentences copied from the doc.
+> 5. **Explore.** Search for practice exercises and further reading, open every link to check it, and add the good ones.
+> 6. **Validate.** `pnpm check:content` must pass.
 
-The output lands at `content/docs/<slug>.md` and shows up in the app on save.
+> [!RECAP]
+> - Research, write, quiz, explore, validate - in that order.
+> - Every practice link is opened and checked before it goes in.
 
-## The file shape
+## The shape of a doc
 
-Front matter, prose, then one fenced `quiz` block at the very end.
+Front matter, sections, a summary, then two fenced JSON blocks: the quiz and the related links.
 
 ````markdown
 ---
 title: How HTTP caching works
 summary: One line that tells someone whether to read this.
-date: 2026-09-17
+date: 2026-09-18
 tags: [http, caching]
 minutes: 12
 ---
 
 ## The big picture
 
-> [!TLDR]
-> One or two sentences. Never three.
+> [!TERMS]
+> - **Cache** - a stored copy of an answer, so you do not have to ask again.
 
-Prose, a table, or a diagram.
+> [!TLDR]
+> One or two sentences.
+
+Table: each row is a header and what it tells the browser.
+
+| Header | Meaning |
+| --- | --- |
+
+![Alt text for screen readers](images/cache-flow.png "A plain-English caption under the image.")
+
+> [!RECAP]
+> - The one thing to remember from this section.
+
+## Summary
+
+> [!SUMMARY]
+> - The key points of the whole doc.
 
 ```quiz
-[{ "q": "...", "options": ["a","b","c","d"], "answer": 2, "expl": "..." }]
+[{ "q": "...", "options": ["a", "b", "c", "d"], "answer": 2, "expl": "..." }]
+```
+
+```related
+[{ "title": "...", "url": "https://...", "source": "MDN", "kind": "read", "note": "Why it is worth your time." }]
 ```
 ````
 
-> [!GOTCHA]
-> The quiz block must be the last thing in the file and must parse as JSON. The
-> content checker strips it before rendering, so a broken block does not blank
-> your doc - it just silently disappears. Run the checker.
+Every section ends with a **Remember** box, and the doc ends with a **Summary** section.
+The checker fails a doc that is missing either.
 
-## Callouts you can use
+> [!RECAP]
+> - Sections end with a RECAP box; the doc ends with a Summary.
+> - Tables need a `Table:` line and images need a caption.
 
-| Marker | Renders as | Use it for |
+## Boxes you can use
+
+Table: each row is a box type, how it looks, and when to use it.
+
+| Marker | Looks like | Use it for |
 | --- | --- | --- |
-| `> [!TLDR]` | Plum box | The one sentence someone in a hurry needs |
-| `> [!TERMS]` | Dashed box | Plain-English definitions of the words the doc uses |
-| `> [!ANALOGY]` | Amber italic box | An everyday comparison for a big idea |
-| `> [!STEPS]` | Blue box | An ordered procedure, 3 to 7 steps |
-| `> [!NUANCE]` | Grey box | Tradeoffs, rejected options, edge cases |
-| `> [!INTERVIEW]` | Amber box | The question someone will ask and the one-line answer |
-| `> [!GOTCHA]` | Red box | The one trap per doc that costs people hours |
-| `> [!WIN]` | Green box | The measured outcome |
+| `> [!TERMS]` | The floating book button, bottom right | Plain definitions; every mention in the text gets a dotted underline you can click |
+| `> [!TLDR]` | Purple, sparkle icon | The one or two sentences someone in a hurry needs |
+| `> [!ANALOGY]` | Amber, light bulb | An everyday comparison for a big idea |
+| `> [!STEPS]` | Blue, numbered list icon | An ordered procedure, 3 to 7 steps |
+| `> [!NUANCE]` | Grey, scales icon | Trade-offs and edge cases |
+| `> [!INTERVIEW]` | Amber, speech bubbles | The question someone will ask, and the short answer |
+| `> [!GOTCHA]` | Red, warning triangle | The one trap per doc that costs people hours |
+| `> [!WIN]` | Green, trophy | The measured outcome |
+| `> [!RECAP]` | Pin | Key points at the end of every section |
+| `> [!SUMMARY]` | Green, clipboard | The whole doc's key points, in the Summary section |
+
+Every box can be collapsed.
+Code blocks are collapsible too, and have a copy button.
+
+> [!RECAP]
+> - Ten box types, each with its own colour and icon.
+> - Glossary words become clickable underlines across the doc.
+
+## Writing so it is easy to read
+
+> [!STEPS]
+> 1. **One sentence per line.** Each line shows on its own line, so a new thought starts on a new line. Keep two sentences on one line only when the second cannot stand alone.
+> 2. **Define every term in the TERMS box**, and in plain words the first time it appears.
+> 3. **Problem first, then the fix.** Say what goes wrong before explaining the solution.
+> 4. **Caption everything.** Every image gets a caption in simple words; every table gets a "how to read this table" line.
+> 5. **End every section with a recap** of two or three points, and the doc with a summary.
+
+> [!RECAP]
+> - Short lines, plain words, problem before fix.
+> - Recaps and captions everywhere.
 
 ## Publish it
 
-The repo deploys to GitHub Pages on every push to `main`.
-
 > [!STEPS]
-> 1. **Enable Pages.** Repository settings, Pages, Source set to GitHub Actions.
-> 2. **Set the base path.** `vite.config.ts` defaults to `/learning-doc-builder/`.
->    Change it if your repo has a different name, or set `VITE_BASE=/` for a
->    custom domain.
-> 3. **Push.** The workflow in `.github/workflows/deploy.yml` builds and deploys.
+> 1. **Turn on Pages.** Repository settings, Pages, Source set to GitHub Actions.
+> 2. **Set the base path.** `vite.config.ts` defaults to `/learning-doc-builder/`. Change it if your repo has a different name.
+> 3. **Push to main.** The workflow checks the content, builds the site and deploys it.
 
-Routing uses a hash router on purpose: a deep link like
-`/#/docs/http-caching` works on Pages with no 404 rewrite and no server config.
+The app uses a hash router, so a deep link like `/#/docs/http-caching` works on GitHub Pages with no server setup.
 
-## Writing a blog post instead
+> [!RECAP]
+> - Turn on Pages, check the base path, push.
 
-Same shape, different folder. Drop the file in `content/blog/` and omit the quiz
-block if the piece does not need one. The reading controls, theme and mobile
-dropdown apply identically.
+## Summary
+
+> [!SUMMARY]
+> - The skill writes one markdown file; the app handles every visual.
+> - Each doc has a words box, recaps, a summary, a quiz and checked practice links.
+> - `pnpm check:content` enforces the rules before anything ships.

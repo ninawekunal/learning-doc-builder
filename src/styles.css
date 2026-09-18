@@ -114,17 +114,7 @@ body {
 }
 
 /* Medium-style section break: three centred dots before every section after the first. */
-.prose h2:not(:first-child)::before {
-  content: '\00B7\2003\00B7\2003\00B7';
-  display: block;
-  margin-bottom: 3rem;
-  text-align: center;
-  font-family: var(--font-serif);
-  font-size: 1.9rem;
-  font-weight: 400;
-  line-height: 1;
-  color: var(--text-muted);
-}
+/* Section breaks are a full-width rule on .doc-section, not decoration inside the heading. */
 
 .prose h3 {
   font-size: 1.1rem;
@@ -224,55 +214,278 @@ body {
 
 .prose svg { max-width: 100%; height: auto; }
 
-/* Callout boxes. One class per bucket, colour driven by tokens. */
+/* Callout boxes. Each type sets --tone / --tone-soft; the box, icon and label read them. */
 .callout {
+  --tone: var(--text-muted);
+  --tone-soft: var(--surface-2);
   margin: 1.6rem 0;
-  padding: 0.95rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--tone) 28%, transparent);
+  background: var(--tone-soft);
   font-size: 0.82em;
-  line-height: 1.6;
-  border-radius: 12px;
+  line-height: 1.65;
+}
+
+.callout-trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.callout-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--tone) 16%, transparent);
+  color: var(--tone);
+  flex-shrink: 0;
+}
+
+.callout-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+
+.callout-chevron {
+  margin-left: auto;
+  color: var(--text-muted);
+  transition: transform 150ms ease;
+}
+
+.callout-body {
+  padding: 0 1.1rem 1rem 3.35rem;
+}
+
+.callout-body > :first-child { margin-top: 0; }
+.callout-body > :last-child { margin-bottom: 0; }
+
+@media (max-width: 640px) {
+  .callout-body { padding-left: 1.1rem; }
+}
+
+.callout-tldr { --tone: var(--primary); --tone-soft: var(--primary-soft); }
+.callout-terms { --tone: var(--accent); --tone-soft: var(--surface); border-style: dashed; }
+.callout-analogy { --tone: var(--accent); --tone-soft: var(--accent-soft); }
+.prose .callout-analogy .callout-body { font-family: var(--font-serif); font-style: italic; font-size: 1.12em; }
+.callout-steps { --tone: var(--info); --tone-soft: var(--info-soft); }
+.callout-nuance { --tone: var(--text-muted); --tone-soft: var(--surface-2); }
+.callout-interview { --tone: var(--accent); --tone-soft: var(--accent-soft); }
+.callout-gotcha { --tone: var(--warn); --tone-soft: var(--warn-soft); }
+.callout-win { --tone: var(--ok); --tone-soft: var(--ok-soft); }
+.callout-recap { --tone: var(--primary); --tone-soft: var(--surface); border-left-width: 4px; }
+.callout-summary { --tone: var(--ok); --tone-soft: var(--ok-soft); border-left-width: 4px; }
+
+/* ---------------------------------------------------------------
+   Sections: a rule, a small "Section N of M" label, then the heading.
+   --------------------------------------------------------------- */
+.doc-section {
+  margin-top: 3.5rem;
+  padding-top: 2.75rem;
+  border-top: 1px solid var(--border);
+  scroll-margin-top: 4rem;
+}
+
+.doc-section:first-of-type { margin-top: 1.5rem; }
+
+.prose .doc-section > h2 { margin-top: 0.35rem; }
+
+.section-number {
+  margin: 0 !important;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* One source line, one visual line, with a little air between them. */
+.prose p .line { display: block; }
+.prose p .line + .line { margin-top: 0.45em; }
+
+/* A glossary word: dotted accent underline, click for the definition. */
+.term-mention {
+  display: inline;
+  text-align: inherit;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.term-mention:hover { background: var(--accent-soft); border-radius: 3px; }
+
+/* ---------------------------------------------------------------
+   Code: header bar with language, copy and collapse.
+   --------------------------------------------------------------- */
+.code-block {
+  margin: 1.6rem 0;
   border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--code-bg);
+  font-family: var(--font-display);
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.5rem 0.35rem 0.75rem;
+  border-bottom: 1px solid var(--border);
   background: var(--surface-2);
 }
 
-.callout > :first-child { margin-top: 0; }
-.callout > :last-child { margin-bottom: 0; }
-
-.callout-label {
-  display: inline-block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  margin-bottom: 0.4rem;
+.code-toggle,
+.code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.5rem;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.callout-tldr { background: var(--primary-soft); border-color: color-mix(in srgb, var(--primary) 30%, transparent); }
-.callout-tldr .callout-label { color: var(--primary); }
+.code-toggle:hover,
+.code-copy:hover { background: var(--border); color: var(--text); }
 
-.callout-terms { background: var(--surface); border-style: dashed; }
-.callout-terms .callout-label { color: var(--accent); }
-.callout-terms ul { list-style: none; padding-left: 0; }
-.callout-terms li { margin: 0.55rem 0; }
-.callout-terms li strong { color: var(--text); }
+.code-body {
+  margin: 0;
+  overflow-x: auto;
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
 
-.prose .callout-analogy { background: var(--accent-soft); border-color: transparent; font-family: var(--font-serif); font-size: 0.95em; font-style: italic; }
-.callout-analogy .callout-label { color: var(--accent); font-family: var(--font-display); font-style: normal; }
+.code-body pre {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  background: transparent !important;
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
 
-.callout-steps { background: var(--info-soft); border-color: color-mix(in srgb, var(--info) 30%, transparent); }
-.callout-steps .callout-label { color: var(--info); }
+pre.code-body { padding: 0.9rem 1rem; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
 
-.callout-nuance { background: var(--surface-2); }
-.callout-nuance .callout-label { color: var(--text-muted); }
+.code-body code { background: none; padding: 0; font-size: inherit; font-family: inherit; }
 
-.callout-interview { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
-.callout-interview .callout-label { color: var(--accent); }
+.shiki span { color: var(--shiki-light); }
+[data-theme='dark'] .shiki span { color: var(--shiki-dark); }
 
-.callout-gotcha { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 35%, transparent); }
-.callout-gotcha .callout-label { color: var(--warn); }
+@media (max-width: 640px) {
+  .code-body { font-size: 0.72rem; }
+}
 
-.callout-win { background: var(--ok-soft); border-color: color-mix(in srgb, var(--ok) 35%, transparent); }
-.callout-win .callout-label { color: var(--ok); }
+/* Figures and tables: always captioned. */
+.doc-figure,
+.doc-table { margin: 2rem 0; font-family: var(--font-display); }
+
+.doc-figure img { margin: 0 auto; }
+
+.doc-figure figcaption,
+.doc-table figcaption {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.doc-figure figcaption { margin-top: 0.7rem; }
+
+.doc-table figcaption {
+  margin-bottom: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.doc-figure figcaption svg,
+.doc-table figcaption svg { margin-top: 0.2rem; color: var(--accent); }
+
+.doc-table .table-wrap { margin: 0; }
+
+.doc-html { margin: 1.75rem 0; }
+
+/* Floating "Words you will meet" button. */
+.glossary-fab {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  border: 0;
+  background: var(--primary);
+  color: var(--bg);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.glossary-fab:hover { transform: translateY(-1px); }
+
+@media (max-width: 640px) {
+  .glossary-fab { width: 2.9rem; height: 2.9rem; right: 1rem; bottom: 1rem; }
+}
+
+.glossary-fab-count {
+  position: absolute;
+  top: -0.2rem;
+  right: -0.2rem;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.35rem;
+  text-align: center;
+}
+
+.related-card {
+  display: block;
+  height: 100%;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 150ms ease;
+}
+
+.related-card:hover { border-color: var(--primary); }
 
 /* Bionic reading: only the fixation half is emphasised. */
 .bionic b.fx {

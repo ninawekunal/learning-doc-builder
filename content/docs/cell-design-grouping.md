@@ -23,6 +23,8 @@ minutes: 15
 > Tables age badly when every field gets its own column and every page formats money its own way.
 > Put context in the same cell as the value it explains, keep numbers people compare apart, and make money look identical everywhere.
 
+Table: each row is a cell design decision and the rule this doc recommends for it.
+
 | Decision | The rule |
 | --- | --- |
 | Put two fields in one cell | Only if the second is read *with* the first, and nobody sorts or filters by it alone |
@@ -35,7 +37,11 @@ minutes: 15
 Every column costs width and one more stop for the eye on every row.
 Once a table scrolls sideways, the name of the thing you are looking at slides off-screen while you read its numbers.
 
-![The 14-column Positions blotter, cut off at Market value by horizontal scroll](images/05-cell-design-grouping-and-standard-cells/before-14-columns.png)
+![The 14-column Positions blotter, cut off at Market value by horizontal scroll](images/05-cell-design-grouping-and-standard-cells/before-14-columns.png "Fourteen columns: the table scrolls sideways and cuts off at Market value.")
+
+> [!RECAP]
+> - Every column costs width and attention.
+> - Group context with its value; keep numbers people compare apart.
 
 ## When two fields share a cell
 
@@ -43,7 +49,7 @@ Once a table scrolls sideways, the name of the thing you are looking at slides o
 > Group two fields when the second one only makes sense next to the first.
 > Nobody scans a column for "NVIDIA Corp". They scan for `NVDA`, and the name underneath just confirms it.
 
-![Two questions decide it: is the second value only read against the first, and does anyone sort or filter by it alone](images/05-cell-design-grouping-and-standard-cells/group-or-keep-separate.png)
+![Two questions decide it: is the second value only read against the first, and does anyone sort or filter by it alone](images/05-cell-design-grouping-and-standard-cells/group-or-keep-separate.png "Two questions decide whether fields share a cell: is the second only read with the first, and does anyone sort by it alone?")
 
 > [!ANALOGY]
 > A grouped cell is a name badge: big name, small job title underneath.
@@ -61,7 +67,12 @@ Once a table scrolls sideways, the name of the thing you are looking at slides o
 > - Work out "3h ago" from a timestamp the server sends, never from the clock while drawing. Otherwise the server's HTML and the browser's differ.
 > - The day someone asks to sort by trader, trader gets its own column back.
 
-![The same rows as 9 grouped columns, fitting the viewport](images/05-cell-design-grouping-and-standard-cells/after-grouped-cells.png)
+![The same rows as 9 grouped columns, fitting the viewport](images/05-cell-design-grouping-and-standard-cells/after-grouped-cells.png "The same data in nine columns, fitting on screen.")
+
+> [!RECAP]
+> - Share a cell when the second field only makes sense next to the first.
+> - Make the second line small and grey so it never competes.
+> - Give it its own column back the day someone sorts by it.
 
 ## When NOT to share a cell
 
@@ -81,13 +92,17 @@ A "Qty @ Price" cell fails three ways at once:
 > [!INTERVIEW]
 > - *How should a grouped header be labelled?* Name both halves, in the same order and with the same separator as the cell: "Filled / Qty". Add a tooltip saying which half the sort uses.
 
+> [!RECAP]
+> - Numbers people sort, filter or compare need their own columns.
+> - Filled / Qty is the exception because it is really one fraction.
+
 ## Sorting ignores what you draw
 
 > [!TLDR]
 > TanStack never looks at your drawn cell when it sorts or filters.
 > So when you merge two fields, you must pick one value for the column to sort by - and write down why.
 
-![One column definition feeds three consumers: the cell draws the screen, the accessorFn drives sort and filter, and a separate CSV list re-splits the pair](images/05-cell-design-grouping-and-standard-cells/three-consumers-of-a-column.png)
+![One column definition feeds three consumers: the cell draws the screen, the accessorFn drives sort and filter, and a separate CSV list re-splits the pair](images/05-cell-design-grouping-and-standard-cells/three-consumers-of-a-column.png "One column feeds three things: the drawn cell, the sort and filter, and the CSV export.")
 
 ```tsx
 export const filledColumn: ColumnDef<OrderRow> = {
@@ -103,6 +118,11 @@ export const filledColumn: ColumnDef<OrderRow> = {
 > - The comment is the point. When someone reports "this column sorts wrong", it tells them it was a choice.
 > - The CSV export splits every merged cell back into separate columns and writes plain numbers, because a spreadsheet cannot add up "EUR -879,400.00".
 > - An empty cell on screen becomes a truly blank field in the CSV.
+
+> [!RECAP]
+> - Sorting and filtering read the accessor, never the drawn cell.
+> - Pick one sort value for a merged column and write down why.
+> - The CSV splits merged cells back apart and writes plain numbers.
 
 ## Money must look the same everywhere
 
@@ -121,12 +141,18 @@ export const filledColumn: ColumnDef<OrderRow> = {
 > - Never shorten to "1.6M" in a table cell. It hides exactly the digits someone is trying to match.
 > - With a second line under the amount, align the currency code to the top line, or it floats awkwardly between the two.
 
-![Money, PnL and Day % columns: USD rows show no code, JPY and GBP rows show a muted code on the left, every right edge lines up](images/05-cell-design-grouping-and-standard-cells/money-and-pnl-cells.png)
+![Money, PnL and Day % columns: USD rows show no code, JPY and GBP rows show a muted code on the left, every right edge lines up](images/05-cell-design-grouping-and-standard-cells/money-and-pnl-cells.png "Money columns: dollar rows show no code, other currencies show a small grey code on the left, and the digits line up.")
+
+> [!RECAP]
+> - Put every money rule inside one MoneyCell.
+> - Two decimals, equal-width digits, one locale, and a currency code only when it differs.
 
 ## Profit, percentages and "no value"
 
 > [!TLDR]
 > One shared empty-cell marker, a plus or minus sign as well as a colour for profit, and a clear difference between "changed by 1.8%" and "is 1.8% of the portfolio".
+
+Table: each row is a kind of cell, the rule for it, and the reason.
 
 | Cell | Rule | Why |
 | --- | --- | --- |
@@ -135,6 +161,10 @@ export const filledColumn: ColumnDef<OrderRow> = {
 | Percent | Format the number yourself, then add `%` | The built-in percent style multiplies by 100, so 1.84 becomes 184% |
 | Loss colour | Its own colour, not the "error red" | A loss is normal information, not something broken |
 
+> [!RECAP]
+> - One shared dash means "no value" - never blank, never 0.00.
+> - Profit needs a sign as well as a colour.
+
 ## Shared rules as column flags
 
 > [!TLDR]
@@ -142,7 +172,7 @@ export const filledColumn: ColumnDef<OrderRow> = {
 > One shared wrapper decides **how** that looks.
 > Change the money style once, and no column file needs touching.
 
-![Before, every columns file draws money itself; after, a column declares meta flags and one DataTableCell wrapper renders MoneyCell](images/05-cell-design-grouping-and-standard-cells/meta-flags-one-wrapper.png)
+![Before, every columns file draws money itself; after, a column declares meta flags and one DataTableCell wrapper renders MoneyCell](images/05-cell-design-grouping-and-standard-cells/meta-flags-one-wrapper.png "Before: every page draws money its own way. After: columns just say money: true and one wrapper draws it.")
 
 ```tsx
 export const marketValueColumn: ColumnDef<PositionRow> = {
@@ -160,6 +190,10 @@ export const marketValueColumn: ColumnDef<PositionRow> = {
 > - `meta` starts empty. You describe your flags by extending TanStack's type, which is the one place TypeScript needs `interface` instead of `type`.
 > - Copying one cell's code into each page and tweaking it feels like research. It is how tables drift apart.
 
+> [!RECAP]
+> - Columns say what they are with meta flags; one wrapper decides how they look.
+> - null and undefined mean different things - never lump them together.
+
 ## Copying, and the two-line limit
 
 > [!TLDR]
@@ -175,6 +209,19 @@ export const marketValueColumn: ColumnDef<PositionRow> = {
 
 > [!WIN]
 > Nine readable columns instead of fourteen, money that matches the statement on every screen, and rules that live in one place instead of forty files.
+
+> [!RECAP]
+> - Copy lives on right-click so the normal click stays free.
+> - At most two lines per cell keeps every row the same height.
+
+## Summary
+
+> [!SUMMARY]
+> - Group a field only when it is read with another and never sorted or filtered alone.
+> - Keep numbers people compare in their own columns.
+> - Sort, filter and export read the raw value; the drawn cell is only for the eyes.
+> - Lock money, profit, percent and empty-cell rules inside shared components.
+> - Describe columns with meta flags and apply the look in one wrapper.
 
 ```quiz
 [
@@ -350,6 +397,40 @@ export const marketValueColumn: ColumnDef<PositionRow> = {
     ],
     "answer": 0,
     "expl": "An age computed from the clock during render differs between the server HTML and the client, causing a hydration mismatch. Stamp time once in the loader."
+  }
+]
+```
+
+```related
+[
+  {
+    "title": "Column definitions",
+    "url": "https://tanstack.com/table/latest/docs/guide/column-defs",
+    "source": "TanStack Table docs",
+    "kind": "read",
+    "note": "Accessors, accessorFn and cell renderers, and why they are separate."
+  },
+  {
+    "title": "Column faceting",
+    "url": "https://tanstack.com/table/v8/docs/guide/column-faceting",
+    "source": "TanStack Table docs",
+    "kind": "read",
+    "note": "Faceted values are built from the accessor too - another reason the renderer does not count."
+  },
+  {
+    "title": "Tables pattern",
+    "url": "https://www.w3.org/WAI/ARIA/apg/patterns/table/",
+    "source": "W3C ARIA guide",
+    "kind": "read",
+    "note": "How screen readers expect table headers and cells to behave."
+  },
+  {
+    "title": "Data Table III",
+    "url": "https://www.greatfrontend.com/questions/user-interface/data-table-iii",
+    "source": "GreatFrontEnd",
+    "kind": "practice",
+    "difficulty": "Hard",
+    "note": "Generic columns are a good place to try meta flags and a shared cell wrapper."
   }
 ]
 ```

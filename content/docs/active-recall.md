@@ -21,6 +21,8 @@ minutes: 11
 > Trying to remember something strengthens it much more than reading it again.
 > Most popular study habits - rereading, highlighting, rewatching - skip the remembering part, which is why they feel useful and are not.
 
+Table: each row is a study habit, how it feels while doing it, and what it really does to memory.
+
 | Habit | Feels like | What it actually does |
 | --- | --- | --- |
 | Rereading | "I've got this" | Makes the *text* familiar, not the idea |
@@ -35,6 +37,10 @@ minutes: 11
 > Looking at a map of the path (rereading) does not wear it in.
 
 The rest of this doc covers four habits that work, and why.
+
+> [!RECAP]
+> - Recalling strengthens memory; rereading mostly does not.
+> - Habits that feel productive often skip recall entirely.
 
 ## Remembering beats rereading
 
@@ -64,6 +70,11 @@ Tested a week later, the rememberers did much better - roughly 61% recall agains
 > - *Why do quizzes with obviously wrong options teach nothing?* You can spot the right answer by sight, so you never have to recall it.
 > - *When is rereading fine?* On a first pass through brand-new vocabulary, when there is nothing in your head to recall yet.
 
+> [!RECAP]
+> - Close the source and write what you remember, then check the gaps.
+> - Re-test only what you missed.
+> - Judging a method by how it feels today picks the wrong one.
+
 ## Spread it out, and let yourself forget a little
 
 > [!TLDR]
@@ -78,6 +89,10 @@ A memory that is still perfectly fresh gains almost nothing from being recalled 
 > - The further away the real test is, the bigger the gaps should be. A large 2006 review by Cepeda and colleagues found the best gap grows with how long you need to remember.
 > - There is no magic schedule. Any spacing beats none by a wide margin; the differences between good schedules are small.
 > - Spacing and remembering add up: spaced *self-testing* beats both spaced rereading and one big quiz session.
+
+> [!RECAP]
+> - Spread the same study time over several days.
+> - A little forgetting between sessions is what makes the next recall count.
 
 ## Good kinds of hard
 
@@ -98,6 +113,10 @@ His key point: how well you do *while practising* and how much you *learn* are d
 > - *An example of a desirable difficulty?* Mixing problem types, so you first have to work out *which* method to use.
 > - *When is difficulty not useful?* When the effort has nothing to do with the skill - bad handwriting, a broken video player, a noisy room.
 
+> [!RECAP]
+> - Performance while practising and real learning are different things.
+> - If studying feels easy, be suspicious.
+
 ## Mix up the problem types
 
 > [!TLDR]
@@ -112,6 +131,10 @@ The catch: your score while practising will be worse, which is why almost nobody
 > 2. **Shuffle them** randomly, not in a pattern you can predict.
 > 3. **Ignore the practice score.** It will drop. That is expected.
 
+> [!RECAP]
+> - Mix problem types so you practise choosing the method.
+> - Your practice score will drop - that is expected.
+
 ## Explain it to yourself
 
 > [!TLDR]
@@ -125,10 +148,16 @@ Both force you to find the gaps that reading glides straight past.
 > - This works best for ideas with causes and effects. For arbitrary pairs - vocabulary, keyboard shortcuts - plain self-testing works better.
 > - Explaining to a real person adds a little pressure that keeps you honest about the bits you skipped.
 
+> [!RECAP]
+> - Ask "why is this true?" after every claim.
+> - Teaching it out loud exposes the gaps.
+
 ## How this doc format uses all of this
 
 > [!TLDR]
 > The layout is not decoration. Each part of it maps to one of the habits above.
+
+Table: each row is a feature of this doc format and the study habit it relies on.
 
 | Feature | Which habit it uses |
 | --- | --- |
@@ -143,12 +172,28 @@ Both force you to find the gaps that reading glides straight past.
 > The target: someone who skimmed scores around 60% on the quiz, and someone who understood scores above 90%.
 > If everyone scores high, the questions are only testing recognition.
 
+> [!RECAP]
+> - Every part of this doc format maps to a study habit.
+> - A good quiz splits skimmers (~60%) from understanders (90%+).
+
 ## The honest limits
 
 > [!NUANCE]
 > - Most of this research used university students learning word-based material in a lab. Real-world effects are smaller and messier.
 > - Self-testing does not create understanding you never had. It protects and strengthens what you built; it cannot replace building it.
 > - "Learning styles" (visual learner, auditory learner) have failed every controlled test of their main claim. Do not plan your studying around them.
+
+> [!RECAP]
+> - Lab results are cleaner than real life.
+> - Self-testing strengthens understanding you built; it cannot build it for you.
+
+## Summary
+
+> [!SUMMARY]
+> - Test yourself instead of rereading - trying and failing still helps, if you check the answer.
+> - Space sessions out and let yourself forget a little in between.
+> - Mix problem types and explain ideas in your own words.
+> - Treat a feeling of ease as a warning sign, not proof you have learned it.
 
 ```quiz
 [
@@ -291,6 +336,32 @@ Both force you to find the gaps that reading glides straight past.
     ],
     "answer": 1,
     "expl": "Spacing and retrieval compound, and gaps should scale with the retention interval. Daily rereading is spaced but skips retrieval; front-loading both sessions collapses the gap."
+  }
+]
+```
+
+```related
+[
+  {
+    "title": "Retrieval Practice",
+    "url": "https://www.retrievalpractice.org",
+    "source": "retrievalpractice.org",
+    "kind": "read",
+    "note": "Free guides on using self-testing, written for teachers and students."
+  },
+  {
+    "title": "Six strategies for effective learning",
+    "url": "https://www.learningscientists.org/blog/2016/8/18-1",
+    "source": "The Learning Scientists",
+    "kind": "read",
+    "note": "Spacing, retrieval, interleaving, elaboration and more, each explained in plain language."
+  },
+  {
+    "title": "Bjork Learning and Forgetting Lab",
+    "url": "https://bjorklab.psych.ucla.edu/research/",
+    "source": "UCLA",
+    "kind": "read",
+    "note": "The research behind desirable difficulties."
   }
 ]
 ```

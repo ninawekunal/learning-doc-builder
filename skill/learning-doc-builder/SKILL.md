@@ -6,7 +6,9 @@ description: >-
   Six to nine short sections, each with TL;DR / Steps / Nuances / Interview
   buckets, at most one real code snippet per section, an optional inline SVG
   diagram, a cheat-sheet table, and a 12-15 question scenario quiz with 2-3
-  select-all items and an explanation on every answer. Use whenever the user
+  select-all items and an explanation on every answer, section recaps, a closing summary,
+  captioned tables and images, a glossary the app turns into clickable
+  underlined terms, and verified practice exercises and further reading. Use whenever the user
   wants a learning doc, explainer, reading guide, onboarding doc, study guide,
   or an "explain X" deliverable in this format / the same format / like those
   docs / in that style, or asks for a doc with a quiz, even without saying
@@ -18,66 +20,62 @@ description: >-
 
 # Learning doc builder
 
-Produce ONE markdown file that teaches a technical topic in a format built for
-a reader with a short attention span, then validate it.
+Produce ONE markdown file that teaches a technical topic to a reader with a short attention span, then validate it.
 
 Output path:
 
 - a learning doc -> `content/docs/<kebab-slug>.md`
 - a blog post -> `content/blog/<kebab-slug>.md` (quiz optional)
 
-You write markdown only. Never write HTML, CSS, or a standalone page. The app
-owns every visual decision, so a format change is one stylesheet, not 40 files.
+You write markdown only.
+Never write HTML, CSS, or a standalone page.
+The app owns every visual decision: collapsible boxes, icons, code highlighting and copy buttons, the floating glossary, underlined terms, section dividers.
 
 ## Golden rule: research first, template last
 
-A beautiful shell around wrong facts is worse than no doc. Gather the substance
-before you open the template. Never invent a file path, a PR number, a metric,
-or a citation. If something is unverified, write "unverified" in the doc.
+A beautiful shell around wrong facts is worse than no doc.
+Gather the substance before you open the template.
+Never invent a file path, a PR number, a metric, a citation or a URL.
+If something is unverified, write "unverified" in the doc.
 
 ## Workflow
 
-1. **Lock the scope.** Ask at most one question, and only if the answer changes
-   the doc: depth, angle, or audience. Never ask about trivia.
+1. **Lock the scope.** Ask at most one question, and only if the answer changes the doc: depth, angle, or audience.
 
 2. **Ground it.**
-   - Codebase topic: read the real code (Grep/Glob/Read, or an exploration
-     subagent). Collect real file paths, real hook and function names, and
-     short real snippets. Tag what exists versus what is planned.
-   - General topic: work from knowledge or the web. Attribute claims to the
-     study or spec they come from, and keep numbers you can defend.
-   - Write down the misconception list as you go. You need it for distractors.
+   - Codebase topic: read the real code. Collect real paths, names and short real snippets.
+   - General topic: work from knowledge or the web, and attribute claims to the study or spec they come from.
+   - Keep a misconception list as you go. The quiz needs it.
+   - Keep a jargon list as you go. The TERMS box needs it.
 
-3. **Write the doc.** Follow `references/authoring-guide.md` exactly. Start from
-   `assets/doc-template.md`.
+3. **Write the doc.** Follow `references/authoring-guide.md` exactly, starting from `assets/doc-template.md`.
 
-4. **Write the quiz.** Read `references/quiz-rubric.md` first. This is where
-   most docs fail: scenario questions in fresh situations, never a sentence
-   lifted from the prose.
+4. **Write the quiz.** Read `references/quiz-rubric.md` first. Scenario questions in fresh situations, never a sentence lifted from the prose.
 
-5. **Validate.** Run `pnpm check:content`. It fails on malformed quiz JSON, a
-   missing front matter field, an answer index out of range, a duplicate slug,
-   and an em dash. Fix and rerun until clean. Report the result.
+5. **Explore.** Read `references/explore-guide.md`. Search for hands-on practice (GreatFrontEnd, official tutorials) and the best further reading, open every URL to confirm it is live and on-topic, and write the `related` block.
 
-6. **Look at it.** Run `pnpm dev` and open the doc. Check the mobile dropdown at
-   375px wide and the dark theme before you call it done.
+6. **Validate.** Run `pnpm check:content` and fix everything it reports.
+
+7. **Look at it.** Run `pnpm dev`, open the doc at 375px and at desktop width, in both themes. Click a few underlined terms and the floating book button.
 
 ## Hard rules
 
-- Write like a patient teacher explaining to one student with ADHD: open with a `> [!TERMS]` box, define every term on first use, use `> [!ANALOGY]` for big ideas. See the Voice section of the authoring guide.
-
+- Voice: a patient teacher explaining to one student with ADHD. Problem first, then the fix.
+- **One sentence per line.** Source lines render as separate lines, so a new line is a new thought. Keep two sentences on one line only when the second cannot stand alone.
+- Open the doc with one `> [!TERMS]` box. Every term in it becomes a clickable underline in the text, and the box itself moves to the floating button. Still define each term in plain words the first time it appears.
+- 6 to 9 `## ` sections. The first is the big picture and leads with a table or a diagram.
+- **Every section ends with a `> [!RECAP]` box** of two or three points to remember.
+- **The doc ends with `## Summary`** holding one `> [!SUMMARY]` box of four or five points.
+- **Every table has a `Table: how to read it` line** directly above it.
+- **Every image has a caption** in simple words: `![alt text](path "Caption.")`.
+- At most one code snippet per section, 5 to 15 lines, with a language tag.
+- Exactly one `> [!GOTCHA]` per doc.
+- The quiz block, then the related block, are the last things in the file, and both parse as JSON.
 - No em dashes anywhere. Use a plain hyphen or a colon.
-- Front matter needs `title`, `summary`, `date`, `tags`. `minutes` is optional.
-- Exactly one `## ` heading per section, 6 to 9 sections. Section one is always
-  the big picture and leads with a table or a diagram, never a prose wall.
-- At most one code snippet per section, 5 to 15 lines, with a source line under
-  it when the code is real.
-- Exactly one `> [!GOTCHA]` per doc. Spend it on the trap that costs real hours.
-- The quiz block is the last thing in the file and must parse as JSON.
-- Every quiz item needs `expl`. No exceptions.
 
 ## Reference files
 
-- `references/authoring-guide.md` - the section shape, callouts, diagrams, tables
-- `references/quiz-rubric.md` - how to write questions that measure anything
+- `references/authoring-guide.md` - voice, section shape, boxes, tables, images, diagrams
+- `references/quiz-rubric.md` - questions that measure understanding
+- `references/explore-guide.md` - finding and verifying practice and reading links
 - `assets/doc-template.md` - the skeleton to copy

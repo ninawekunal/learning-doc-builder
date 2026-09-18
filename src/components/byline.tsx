@@ -29,7 +29,17 @@ export const Byline = ({ date, minutes, compact = false }: BylineProps) =>
     <span className="flex items-center gap-3">
       <img src={site.author.avatar} alt="" width={44} height={44} className="size-11 rounded-full object-cover" />
       <span className="flex flex-col text-[14px] leading-snug sm:text-[15px]">
-        <span className="font-medium text-[var(--text)]">By {site.author.name}</span>
+        <span className="font-medium text-[var(--text)]">
+          By{' '}
+          <a
+            href={site.author.url}
+            target="_blank"
+            rel="noreferrer"
+            className="cursor-pointer underline decoration-[var(--border)] underline-offset-4 hover:decoration-[var(--primary)]"
+          >
+            {site.author.name}
+          </a>
+        </span>
         <span className="text-[var(--text-muted)]">
           <Meta date={date} minutes={minutes} />
         </span>

@@ -8,48 +8,59 @@ minutes: 12
 
 ## The big picture
 
+> [!TERMS]
+> - **REPLACE term** - one plain sentence a beginner understands.
+> - **REPLACE term (other name)** - one plain sentence.
+
 > [!TLDR]
-> REPLACE - one or two sentences, never three.
+> REPLACE - one or two sentences.
+
+REPLACE - the problem, one sentence per line.
+REPLACE - why it matters.
+
+Table: REPLACE - how to read this table.
 
 | Thing | What it does | When it bites |
 | --- | --- | --- |
 | REPLACE | REPLACE | REPLACE |
+
+> [!ANALOGY]
+> REPLACE - an everyday comparison.
+
+> [!RECAP]
+> - REPLACE - the first thing to remember.
+> - REPLACE - the second.
 
 ## REPLACE - section two
 
 > [!TLDR]
 > REPLACE
 
-REPLACE - prose, a snippet, or a table.
+REPLACE - prose, one sentence per line.
+
+![REPLACE alt text](images/REPLACE.png "REPLACE - a caption in simple words.")
 
 > [!STEPS]
 > 1. **REPLACE.** One sentence on why.
 > 2. **REPLACE.** One sentence on why.
-> 3. **REPLACE.** One sentence on why.
 
 > [!NUANCE]
-> - REPLACE - a tradeoff or an edge case.
-> - REPLACE - an option that was rejected and why.
+> - REPLACE - a trade-off or an edge case.
 
 > [!INTERVIEW]
-> - *REPLACE - the question someone asks.* REPLACE - the one-line answer.
-
-## REPLACE - section three
-
-> [!TLDR]
-> REPLACE
+> - *REPLACE - the question someone asks.* REPLACE - the short answer.
 
 > [!GOTCHA]
-> REPLACE - the single trap that costs people hours. One per doc.
+> REPLACE - the one trap that costs hours.
 
-## REPLACE - cheat sheet
+> [!RECAP]
+> - REPLACE
+> - REPLACE
 
-| Thing | Where it lives | The rule |
-| --- | --- | --- |
-| REPLACE | REPLACE | REPLACE |
+## Summary
 
-> [!WIN]
-> REPLACE - the measured outcome or the structural payoff.
+> [!SUMMARY]
+> - REPLACE - four or five points covering the whole doc.
 
 ```quiz
 [
@@ -58,6 +69,18 @@ REPLACE - prose, a snippet, or a table.
     "options": ["REPLACE", "REPLACE", "REPLACE", "REPLACE"],
     "answer": 0,
     "expl": "REPLACE - why the right one is right and why the tempting wrong one is wrong."
+  }
+]
+```
+
+```related
+[
+  {
+    "title": "REPLACE",
+    "url": "https://REPLACE",
+    "source": "REPLACE",
+    "kind": "practice",
+    "note": "REPLACE - why this link, tied to a section of the doc."
   }
 ]
 ```

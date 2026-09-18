@@ -1,3 +1,5 @@
+import type { RelatedLink } from '@/lib/md/types'
+
 export type QuizItem = {
   q: string
   options: string[]
@@ -31,4 +33,5 @@ export type ContentEntry = {
   /** Prose markdown with the quiz block stripped out. */
   body: string
   quiz: QuizItem[]
+  related: RelatedLink[]
 }
