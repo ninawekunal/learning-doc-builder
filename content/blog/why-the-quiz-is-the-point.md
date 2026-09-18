@@ -18,7 +18,7 @@ material, because the author did the hard part - deciding what mattered, in what
 order - and you got the result without doing any of it.
 
 > [!GOTCHA]
-> Fluency is the trap. The smoother a doc reads, the more confident you feel and
+> Fluency - the feeling that something is easy because it reads smoothly - is the trap. The smoother a doc reads, the more confident you feel and
 > the less you have actually retained. Ease of reading and durability of memory
 > pull in opposite directions.
 
@@ -44,7 +44,7 @@ vague. The quiz became the editor.
 >    phrasing from the doc, it tests reading, not understanding.
 > 2. **Put it in a fresh scenario.** A bug to diagnose, a teammate's proposal to
 >    push back on, a number to interpret.
-> 3. **Make every distractor a real misconception.** The wrong answers should be
+> 3. **Make every wrong option a real misconception.** Those wrong options (distractors) should be
 >    things a competent person actually believes.
 > 4. **Equalise option lengths.** If the correct answer is always the longest,
 >    you have built a test of test-taking.

@@ -8,164 +8,147 @@ minutes: 11
 
 ## The big picture
 
-> [!TLDR]
-> Retrieving information strengthens memory far more than reviewing it. Almost
-> every popular study habit - rereading, highlighting, rewatching - skips
-> retrieval entirely, which is why they feel productive and are not.
+> [!TERMS]
+> - **Active recall (retrieval practice)** - pulling an answer out of your own head, instead of reading it again.
+> - **Review / restudy** - reading or watching the material again.
+> - **Spacing** - spreading study sessions out over days instead of doing them all at once.
+> - **Retention** - how much you still remember later, say a week or a month on.
+> - **Fluency illusion** - the feeling of "I know this" that comes from something looking familiar, not from being able to recall it.
+> - **Desirable difficulty** - a kind of effort that feels harder while practising but makes learning stick.
+> - **Interleaving** - mixing different kinds of problems in one session instead of doing one kind at a time.
 
-| Habit | Feels like | Actually does |
+> [!TLDR]
+> Trying to remember something strengthens it much more than reading it again.
+> Most popular study habits - rereading, highlighting, rewatching - skip the remembering part, which is why they feel useful and are not.
+
+| Habit | Feels like | What it actually does |
 | --- | --- | --- |
-| Rereading | Mastery | Builds familiarity with the *text*, not the idea |
-| Highlighting | Filtering | Defers the thinking to a later pass that rarely happens |
-| Rewatching a talk | Review | Recognition, which is a much weaker signal than recall |
-| Self-quizzing | Struggle | Strengthens the retrieval path you will need later |
-| Spacing | Inefficiency | Forces partial forgetting, which is where the gain is |
+| Rereading | "I've got this" | Makes the *text* familiar, not the idea |
+| Highlighting | Sorting out what matters | Puts off the thinking to a later pass that rarely happens |
+| Rewatching a talk | Revising | Trains recognition, which is much weaker than recall |
+| Quizzing yourself | Struggling | Strengthens the exact path you will need later |
+| Spacing sessions out | Inefficient | Lets you forget a little, which is where the gain comes from |
 
-The rest of this doc is four mechanisms and how to use them.
+> [!ANALOGY]
+> Memory is more like a path through a field than a file in a drawer.
+> Every time you walk it - every time you *recall* - the path gets clearer.
+> Looking at a map of the path (rereading) does not wear it in.
 
-## Retrieval beats review
+The rest of this doc covers four habits that work, and why.
+
+## Remembering beats rereading
 
 > [!TLDR]
-> Pulling an answer out of your head changes the memory. Putting the answer in
-> front of your eyes mostly does not.
+> Pulling an answer out of your head changes the memory.
+> Putting the answer in front of your eyes mostly does not.
 
-Roediger and Karpicke's 2006 experiments are the canonical demonstration. Students
-read a passage, then either restudied it or took a free-recall test on it. On a
-test five minutes later, the restudy group did better. On a test a week later,
-the retrieval group did substantially better - roughly 61 percent recall against
-roughly 40 percent.
+The best-known experiment is by Roediger and Karpicke, from 2006.
+Students read a short passage.
+Then some read it again, and others wrote down everything they could remember.
+
+Tested five minutes later, the rereaders did better.
+Tested a week later, the rememberers did much better - roughly 61% recall against roughly 40%.
 
 > [!STEPS]
-> 1. **Read once, closed-book.** Get through the material without stopping to
->    re-read a paragraph you did not follow.
-> 2. **Shut it and write.** Reproduce the structure from memory - headings,
->    claims, the one number that mattered.
-> 3. **Compare, do not correct in place.** Mark what you missed. Missing things
->    is the signal, not the failure.
-> 4. **Re-test the misses only.** Restudying what you already recalled is the
->    least valuable thing you can do next.
+> 1. **Read once, straight through.** Do not stop to reread a paragraph you did not follow.
+> 2. **Close it and write.** Jot down the structure from memory: the headings, the main claims, the one number that mattered.
+> 3. **Compare, do not fix in place.** Mark what you missed. The gaps are the useful part, not a failure.
+> 4. **Re-test only the misses.** Going over what you already remembered is the least useful thing you can do next.
 
 > [!NUANCE]
-> - The short-term result inverts. If you test both groups minutes later, review
->   wins. Any study method judged on how it feels in the moment will pick the
->   wrong one.
-> - Retrieval helps even when you fail, provided you see the answer afterwards.
->   A guess followed by feedback beats no guess.
-> - Free recall is stronger than recognition. Multiple choice still works, but
->   only if the distractors are plausible enough to require real discrimination.
+> - The short-term result points the wrong way. Minutes later, rereading wins. So any method judged by how it feels *today* picks the weaker option.
+> - Trying and failing still helps - as long as you see the right answer afterwards.
+> - Writing an answer from scratch is stronger than picking from a list. Multiple choice still works, but only when the wrong options are believable enough to make you think.
 
 > [!INTERVIEW]
-> - *Why do multiple-choice questions with obvious wrong answers teach nothing?*
->   Because recognition succeeds without retrieval. The path you needed to
->   strengthen is never exercised.
-> - *When is rereading the right call?* On a first pass through genuinely new
->   vocabulary, where you do not yet have anything to retrieve.
+> - *Why do quizzes with obviously wrong options teach nothing?* You can spot the right answer by sight, so you never have to recall it.
+> - *When is rereading fine?* On a first pass through brand-new vocabulary, when there is nothing in your head to recall yet.
 
-## Spacing, and the value of forgetting
+## Spread it out, and let yourself forget a little
 
 > [!TLDR]
-> The same total study time, spread out, produces markedly better long-term
-> retention than the same time massed together. The forgetting between sessions
-> is doing the work.
+> The same total study time, spread over several days, sticks far better than the same time crammed into one sitting.
+> The forgetting in between is doing the work.
 
-Cramming works against a test tomorrow and fails against a test in a month. The
-mechanism is that a slightly degraded memory takes more effort to retrieve, and
-that effort is what strengthens it. A memory that is still perfectly available
-gains nothing from being retrieved again.
+Cramming gets you through tomorrow's test and fails you next month.
+Here is why: a memory that has faded slightly takes effort to bring back, and that effort is what strengthens it.
+A memory that is still perfectly fresh gains almost nothing from being recalled again.
 
 > [!NUANCE]
-> - Interval size should scale with how far away the real test is. Cepeda's 2006
->   review found the optimal gap grows with the retention interval, not with the
->   material.
-> - There is no single magic schedule. Any spacing beats none by a wide margin;
->   the difference between good schedules is small by comparison.
-> - Spacing and retrieval compound. Spaced *testing* outperforms both spaced
->   restudy and massed testing.
+> - The further away the real test is, the bigger the gaps should be. A large 2006 review by Cepeda and colleagues found the best gap grows with how long you need to remember.
+> - There is no magic schedule. Any spacing beats none by a wide margin; the differences between good schedules are small.
+> - Spacing and remembering add up: spaced *self-testing* beats both spaced rereading and one big quiz session.
 
-## Desirable difficulty
+## Good kinds of hard
 
 > [!TLDR]
-> Conditions that slow learning down during practice often improve retention and
-> transfer. Conditions that speed it up often do the opposite.
+> Some things that make practice feel slower and harder make learning last longer.
+> Some things that make practice feel smooth make it fade faster.
 
-Robert Bjork's framing: performance during training and learning are different
-things, and they frequently move in opposite directions. Fluent, smooth practice
-produces fluent, smooth performance that evaporates.
+Psychologist Robert Bjork calls these **desirable difficulties**.
+His key point: how well you do *while practising* and how much you *learn* are different things, and they often move in opposite directions.
 
 > [!GOTCHA]
-> The illusion of fluency is the single most expensive trap here. Rereading a
-> chapter makes the text feel obvious, and your brain reads that obviousness as
-> "I know this." You know the *sentences*. Close the book and the knowledge is
-> not there. Every time a study method feels easy, treat that as evidence
-> against it, not for it.
+> The fluency illusion is the most expensive trap in studying.
+> Reread a chapter and the text starts to feel obvious, and your brain reads that feeling as "I know this".
+> You know the *sentences*. Close the book and the knowledge is not there.
+> Whenever a study method feels easy, treat that as a warning sign, not a good sign.
 
 > [!INTERVIEW]
-> - *Give an example of a desirable difficulty.* Interleaving problem types so
->   you must first identify which method applies, instead of blocking one type.
-> - *What makes a difficulty undesirable?* One that costs effort without
->   engaging the target process - bad handwriting, a broken video player.
+> - *An example of a desirable difficulty?* Mixing problem types, so you first have to work out *which* method to use.
+> - *When is difficulty not useful?* When the effort has nothing to do with the skill - bad handwriting, a broken video player, a noisy room.
 
-## Interleaving
+## Mix up the problem types
 
 > [!TLDR]
-> Mixing problem types within a session beats practising one type to fluency
-> before moving on, because real situations do not tell you which method to use.
+> Mixing different kinds of problems in one session beats doing one kind until it feels easy, because real life never tells you which method to use.
 
-Blocked practice teaches execution. Interleaved practice teaches selection - and
-selection is usually the part that fails under real conditions. The catch is that
-interleaved practice produces visibly worse scores *during* practice, which is
-why almost nobody sticks with it voluntarily.
+Doing ten of the same problem teaches you to *carry out* a method.
+Mixing them teaches you to *choose* the method - and choosing is usually what goes wrong for real.
+The catch: your score while practising will be worse, which is why almost nobody sticks with it.
 
 > [!STEPS]
-> 1. **Group by decision, not by topic.** Put together the things you have to
->    tell apart, not the things that are alike.
-> 2. **Shuffle.** Random order, not a rotation you can predict.
-> 3. **Ignore the practice score.** It will be worse. That is expected.
+> 1. **Group things you need to tell apart**, not things that are alike.
+> 2. **Shuffle them** randomly, not in a pattern you can predict.
+> 3. **Ignore the practice score.** It will drop. That is expected.
 
-## Elaboration and self-explanation
+## Explain it to yourself
 
 > [!TLDR]
-> Asking "why is this true?" and "how does this connect to what I already know?"
-> during study reliably outperforms passive processing of the same material.
+> Asking "why is this true?" and "how does this connect to what I already know?" while studying beats passively reading the same material.
 
-The cheapest version is the why-question: after every claim, ask why it holds.
-The more durable version is teaching it, out loud, to nobody. Both force you to
-find the gaps that reading past them hides.
+The cheap version is to ask "why?" after every claim.
+The stronger version is to teach it out loud, even to nobody.
+Both force you to find the gaps that reading glides straight past.
 
 > [!NUANCE]
-> - Self-explanation helps most on material with causal structure. On arbitrary
->   pairings - vocabulary, keyboard shortcuts - retrieval practice dominates.
-> - Explaining to a real person adds social pressure that keeps you honest about
->   the parts you skipped.
+> - This works best for ideas with causes and effects. For arbitrary pairs - vocabulary, keyboard shortcuts - plain self-testing works better.
+> - Explaining to a real person adds a little pressure that keeps you honest about the bits you skipped.
 
-## How this doc format applies it
+## How this doc format uses all of this
 
 > [!TLDR]
-> The format is not decoration. Each piece maps to one of the mechanisms above.
+> The layout is not decoration. Each part of it maps to one of the habits above.
 
-| Feature | Mechanism |
+| Feature | Which habit it uses |
 | --- | --- |
-| Four buckets per section | Chunking, so a section is scannable and re-retrievable |
-| Interview must-know bullets | Pre-formed retrieval cues you can self-test on |
-| Scenario quiz at the end | Retrieval practice with feedback |
-| Select-all questions | Forces discrimination instead of pattern matching |
-| Explanation after every answer | Feedback, which is what makes failed retrieval useful |
-| Copy-my-result | A record you can space against later |
+| Four short boxes per section | Small chunks you can recall one at a time |
+| "Interview must-know" bullets | Ready-made questions to test yourself with |
+| Scenario quiz at the end | Remembering, with feedback |
+| "Select all that apply" questions | Makes you tell similar things apart |
+| An explanation after every answer | Feedback, which is what makes a wrong guess useful |
+| "Copy my result" | A dated score to decide what to revisit, and when |
 
 > [!WIN]
-> The practical target: a reader who skimmed scores around 60 percent on the
-> quiz, and a reader who understood scores above 90. If everybody scores high,
-> the questions are testing recognition and the doc is lying to you.
+> The target: someone who skimmed scores around 60% on the quiz, and someone who understood scores above 90%.
+> If everyone scores high, the questions are only testing recognition.
 
 ## The honest limits
 
 > [!NUANCE]
-> - Most of this research is on verbal material with undergraduates in labs.
->   Effect sizes in the wild are smaller and messier.
-> - Retrieval practice does not create understanding you never had. It preserves
->   and strengthens what you built; it cannot substitute for building it.
-> - Learning-styles matching - visual learner, auditory learner - has failed
->   every controlled test of its central prediction. Do not schedule around it.
+> - Most of this research used university students learning word-based material in a lab. Real-world effects are smaller and messier.
+> - Self-testing does not create understanding you never had. It protects and strengthens what you built; it cannot replace building it.
+> - "Learning styles" (visual learner, auditory learner) have failed every controlled test of their main claim. Do not plan your studying around them.
 
 ```quiz
 [

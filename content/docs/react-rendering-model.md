@@ -8,10 +8,21 @@ minutes: 14
 
 ## The big picture
 
+> [!TERMS]
+> - **Component** - a function that returns what a piece of the screen should look like.
+> - **Render** - React calling your component function to find out what it should show now.
+> - **Re-render** - React calling it again, because something may have changed.
+> - **DOM** - the browser's live tree of elements. Changing it is what actually changes the screen.
+> - **Commit** - the moment React writes its changes into the DOM.
+> - **State** - a value React remembers for a component between renders.
+> - **Props** - the inputs a parent passes to a child component.
+> - **Context** - a way to pass a value to many components deep in the tree without handing it down as props.
+> - **Memoisation (memo)** - remembering a previous result so it can be reused instead of recalculated.
+
 > [!TLDR]
-> "Re-render" means React called your component function again. It does not mean
-> the DOM changed. Those are two separate phases, and almost every performance
-> mistake comes from conflating them.
+> "Re-render" means React called your component function again.
+> It does **not** mean the screen changed.
+> Those are two separate steps, and most React performance mistakes come from mixing them up.
 
 <svg viewBox="0 0 720 200" role="img" aria-label="Render phase feeds into commit phase">
   <rect x="10" y="40" width="200" height="90" rx="12" fill="none" stroke="var(--primary)" stroke-width="2"/>
@@ -33,34 +44,36 @@ minutes: 14
   <text x="390" y="160" text-anchor="middle" font-size="12" fill="var(--text-muted)">synchronous, never interrupted</text>
 </svg>
 
-The render phase is pure and interruptible. React may start it, throw the work
-away, and start again. The commit phase is synchronous and happens once.
+> [!ANALOGY]
+> Rendering is an architect redrawing the plans.
+> Committing is the builders actually changing the house.
+> An architect can redraw the plans ten times and throw nine away - the house only changes once.
+
+The **render** step is React working out what the screen *should* look like.
+It can be paused, thrown away and restarted.
+The **commit** step is React making the real changes to the page, and it happens once, all at once.
 
 > [!NUANCE]
-> Because the render phase can be discarded and re-run, anything with a side
-> effect placed in the component body can happen more than once per visible
-> update - or zero times. This is also why StrictMode double-invokes components
-> in development: it is surfacing that assumption, not introducing a bug.
+> Because React may throw a render away and run it again, anything with a side effect written straight in your component - sending a request, writing to storage - might happen twice, or never.
+> That is why React's development-only "StrictMode" deliberately calls your components twice: to flush out that mistake, not to cause one.
 
 ## The four reasons a component runs again
 
 > [!TLDR]
-> State changed, a parent re-rendered, a consumed context changed, or the
-> component's own hook order forced it. Props changing is not on the list.
+> A component re-renders when its own state changes, its parent re-renders, a context it reads changes, or a hook it uses tells it to.
+> "Its props changed" is not on the list.
 
 > [!STEPS]
-> 1. **Its own state changed.** A `useState` or `useReducer` setter dispatched a
->    value React does not consider equal.
-> 2. **Its parent re-rendered.** By default the child is called again regardless
->    of whether its props differ.
-> 3. **A context it consumes changed value.** `memo` does not stop this.
-> 4. **A hook it uses told it to.** `useSyncExternalStore` firing, for example.
+> 1. **Its own state changed.** A state setter was called with a new value.
+> 2. **Its parent re-rendered.** By default the child runs again too, even if its props are identical.
+> 3. **A context it reads changed.** Every component reading that context runs again.
+> 4. **A hook asked it to.** For example, a hook subscribed to an outside store that just changed.
 
 ```tsx
 const Parent = () => {
   const [n, setN] = useState(0)
 
-  // Child re-renders on every click even though its props never change.
+  // Child runs again on every click, even though its props never change.
   return (
     <>
       <Button onClick={() => setN(n + 1)}>{n}</Button>
@@ -71,132 +84,106 @@ const Parent = () => {
 ```
 
 > [!NUANCE]
-> - Props changing does not itself trigger anything. Props change *because* the
->   parent re-rendered, and the parent re-rendering is the actual cause.
-> - `React.memo` intercepts reason 2 only. It compares props shallowly and skips
->   the call if they match. It has no effect on state or context.
-> - Children passed as a `children` prop are created by the parent, so they are
->   the same element object across the parent's re-renders and React can bail
->   out on that subtree. This is why "lift the expensive part into `children`"
->   works without any memo at all.
+> - Props never change on their own. They change *because* the parent re-rendered - so the parent is the real cause.
+> - `React.memo` only blocks reason 2. It checks whether the props look the same, and skips the child if they do. It does nothing about state or context.
+> - Passing something as `children` is a neat trick: the parent's parent creates it, so it stays the exact same object when the parent re-renders, and React skips it.
 
 > [!INTERVIEW]
-> - *Does `memo` prevent a re-render caused by context?* No. Context propagates
->   to consumers directly and bypasses the memo comparison.
-> - *Why does passing `<Expensive />` as `children` avoid re-rendering it?* The
->   element is created in the grandparent's scope, so its identity is stable and
->   React bails out on the unchanged subtree.
+> - *Does `memo` stop a re-render caused by context?* No. Context goes straight to every component that reads it.
+> - *Why does passing `<Expensive />` as `children` avoid re-rendering it?* It was created higher up, so it is the same object each time, and React skips unchanged objects.
 
-## Bailouts
+## When React skips work
 
 > [!TLDR]
-> React skips work at two levels: state bailout when the new state is
-> `Object.is`-equal to the old, and element bailout when the new element is
-> reference-identical to the previous one.
+> React skips work in two places: when new state is exactly the same value as old state, and when a child element is exactly the same object as last time.
+
+"Exactly the same" here means React's `Object.is` check.
+For numbers and text, same value means same.
+For objects and arrays, only *the very same object* counts - two objects with identical contents are still different.
 
 ```tsx
 const [user, setUser] = useState({ name: 'Ada' })
 
-setUser(user)                     // bails out, same reference
-setUser({ ...user })              // re-renders, new object
-setUser((u) => ({ ...u }))        // re-renders, new object
+setUser(user)               // same object: React can skip
+setUser({ ...user })        // a new object with the same contents: re-renders
 ```
 
 > [!NUANCE]
-> - The state bailout is not guaranteed to skip the render call. React may still
->   call your component once more before settling, so never rely on it for
->   correctness.
-> - Object and array state loses the bailout entirely, because a fresh object is
->   never `Object.is`-equal to the old one. Store primitives where you can.
-> - A bailout stops at the component. Its children are not re-rendered, which is
->   why a bailout high in the tree is worth far more than one at a leaf.
+> - The skip is not a promise. React may still call your component once more before it settles, so never rely on it for correctness.
+> - Object and array state almost never gets the skip, because you normally create a new one. Keep simple values in state where you can.
+> - A skip stops everything below it too, so a skip near the top of the page saves far more than one at the bottom.
 
-## Keys and identity
+## Keys: telling list items apart
 
 > [!TLDR]
-> A key tells React which element in a list corresponds to which element from
-> the previous render. Get it wrong and React reuses the wrong component
-> instance, carrying its state to the wrong row.
+> A `key` tells React which item in a list is which from one render to the next.
+> Get it wrong and React reuses the wrong component, so one item's state shows up on another.
 
-Using an array index as a key is correct only for a list that is append-only and
-never reordered, filtered, or deleted from the middle. Anything else and state
-smears across rows.
+> [!ANALOGY]
+> Keys are name tags at a party.
+> Without them React greets people by where they are standing, and gets confused the moment anyone moves.
+
+Using the array position as the key only works for a list that never gets reordered, filtered or has items removed from the middle.
 
 > [!GOTCHA]
-> Changing a component's `key` unmounts and remounts it, destroying all its
-> state. This is a legitimate tool - `<Form key={userId} />` resets the form
-> when the user changes - but it also means an accidentally unstable key, like
-> one built from `Math.random()`, remounts the subtree on every single render.
+> Changing a component's `key` throws it away and builds a fresh one, wiping its state.
+> That can be useful on purpose - `<Form key={userId} />` resets the form when the user changes.
+> But a key that accidentally changes every render, like one built from `Math.random()`, rebuilds that part of the page on *every* render, losing typed text and focus.
 
 ## Memoisation, and when it does nothing
 
 > [!TLDR]
-> `useMemo`, `useCallback` and `memo` all pay a cost on every render to maybe
-> save work on the next one. They pay off when the saved work is large or the
-> memoised value feeds a dependency array.
+> `useMemo`, `useCallback` and `memo` all cost a little on every render in exchange for maybe saving work later.
+> They pay off when the saved work is big, or when something else depends on the result staying the same object.
 
 ```tsx
-// Pointless: the array is cheap and nothing downstream depends on its identity.
+// Pointless: a tiny array, and nothing depends on it being the same object.
 const options = useMemo(() => ['a', 'b'], [])
 
-// Worth it: rows is expensive, and its identity feeds a memoised table.
+// Worth it: the transform is expensive, and a memoised table receives the result.
 const rows = useMemo(() => transform(raw), [raw])
 ```
 
 > [!NUANCE]
-> - `useCallback` on a handler passed to a plain DOM element saves nothing. The
->   DOM node does not care about function identity.
-> - `memo` with an object or function prop that is recreated inline fails on
->   every render. The comparison is shallow, so a new reference is a miss.
-> - The React Compiler memoises automatically at build time, which makes most
->   hand-written `useMemo` redundant. It bails out of files or functions it
->   cannot prove safe, so a manual escape hatch in one hook can silently drop
->   the optimisation for that whole function.
+> - `useCallback` on a click handler passed to a plain `<button>` saves nothing. The browser element does not care whether the function is the same one.
+> - `memo` fails if you pass an object or function written inline, because it is a new one every render.
+> - The **React Compiler** is a build tool that adds this caching for you. It quietly skips any function it cannot prove safe, so one hand-written workaround can switch it off for that whole function.
 
 > [!INTERVIEW]
-> - *When is `useMemo` actively harmful?* When the computation is cheaper than
->   the comparison plus allocation, which is most of the time for short arrays
->   and simple objects.
-> - *Why might adding `memo` change nothing?* Because the component re-renders
->   from state or context, or because a prop is a fresh object every render.
+> - *When does `useMemo` make things worse?* When the calculation is cheaper than the checking and storing - true for most short arrays and small objects.
+> - *Why might adding `memo` change nothing?* The component re-renders because of state or context, or a prop is a new object every time.
 
-## Transitions and priority
+## Urgent and non-urgent updates
 
 > [!TLDR]
-> `startTransition` marks an update as non-urgent, so React can interrupt it to
-> process something the user did. It does not make the work faster.
+> `startTransition` marks an update as "not urgent", so React can pause it to handle something the user just did, like typing.
+> It does not make the slow work any faster.
 
 ```tsx
 const [isPending, startTransition] = useTransition()
 
 const onType = (value: string) => {
-  setQuery(value)                                   // urgent, keeps the input responsive
-  startTransition(() => setResults(search(value)))  // interruptible
+  setQuery(value)                                   // urgent: keep the input responsive
+  startTransition(() => setResults(search(value)))  // can be paused
 }
 ```
 
 > [!NUANCE]
-> - A transition cannot interrupt itself out of a slow synchronous function. If
->   `search` blocks for 200ms, that 200ms still blocks the main thread.
-> - `isPending` gives you a place to show staleness without a spinner flash.
-> - Only the render phase is interruptible. Once React commits, it finishes.
+> - React can only pause *between* pieces of work. If `search` itself takes 200ms without stopping, the page is stuck for those 200ms either way.
+> - `isPending` lets you show "results updating" without a flashing spinner.
+> - Only rendering can be paused. Once React starts committing, it finishes.
 
 ## A debugging order that works
 
 > [!STEPS]
-> 1. **Confirm it re-renders at all.** The React DevTools profiler's "why did
->    this render" is the ground truth; guessing wastes hours.
-> 2. **Find the cause, not the component.** A leaf re-rendering usually means a
->    provider or a parent above it changed.
-> 3. **Move state down, or content up.** Most re-render problems are a state
->    variable living higher in the tree than the thing it controls.
-> 4. **Only then reach for memo.** Memo applied without step 2 tends to relocate
->    the cost rather than remove it.
+> 1. **Check it really re-renders.** The React DevTools profiler can tell you exactly why a component rendered. Guessing wastes hours.
+> 2. **Find the cause, not the victim.** A small component re-rendering usually means something above it changed.
+> 3. **Move state down, or content up.** Most re-render problems are a piece of state living higher up the tree than the thing it controls.
+> 4. **Only then reach for `memo`.** Memo added before step 2 tends to move the cost around rather than remove it.
 
 > [!WIN]
-> The reliable structural fix is state colocation: the further down the tree a
-> piece of state lives, the smaller the subtree its updates can invalidate. It
-> costs nothing at runtime and does not break when someone adds a prop.
+> The fix that always works is keeping state close to where it is used.
+> The lower in the tree a piece of state lives, the less of the page its changes can touch - at no runtime cost, and nothing breaks when someone adds a prop.
 
 ```quiz
 [
