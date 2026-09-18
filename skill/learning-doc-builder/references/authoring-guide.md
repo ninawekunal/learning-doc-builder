@@ -4,6 +4,20 @@ Read this fully before writing. The reader reads fast, skips prose walls, and
 loses the thread if a section runs long. Structure is not decoration here; it is
 the thing that makes the doc usable.
 
+## Voice: a patient teacher, one student
+
+Write as a teacher explaining the topic to one student with ADHD who is smart but new to it.
+The reader should never have to stop and look a word up.
+
+- **Define every term the first time it appears**, in plain words, in the same sentence or the next one.
+  "A BFF (a small server that sits between the browser and the real API) ..." - not just "a BFF".
+- **Open every doc with a `> [!TERMS]` box** listing the 5-10 words the doc leans on, each with a one-line plain definition.
+- **Lead with the problem, then the fix.** "Here is what goes wrong. Here is why. Here is what we do instead."
+- **Use one `> [!ANALOGY]` per big idea** - an everyday comparison that makes the mechanism click.
+- **One idea per paragraph, one sentence per line.** Short sentences. Second person.
+- **Name the feeling.** "This looks fine, and that is exactly the trap."
+- Never stack two unexplained terms in one sentence.
+
 ## Front matter
 
 ```yaml
@@ -45,6 +59,21 @@ Prose, a snippet, or a table.
 
 > [!INTERVIEW]
 > - *The question someone will ask.* The one-line answer.
+```
+
+Plus, at the top of the doc, once:
+
+```markdown
+> [!TERMS]
+> - **Row model** - the list of rows the table hands you after filtering, sorting and paging.
+> - **Accessor** - the function that reads one value out of a row.
+```
+
+And for any idea that benefits from a picture in the reader's head:
+
+```markdown
+> [!ANALOGY]
+> A virtualized list is a train window: the landscape is miles long, but you only ever see one window's worth.
 ```
 
 Plus, once per doc each:

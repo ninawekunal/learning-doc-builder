@@ -64,6 +64,8 @@ or a citation. If something is unverified, write "unverified" in the doc.
 
 ## Hard rules
 
+- Write like a patient teacher explaining to one student with ADHD: open with a `> [!TERMS]` box, define every term on first use, use `> [!ANALOGY]` for big ideas. See the Voice section of the authoring guide.
+
 - No em dashes anywhere. Use a plain hyphen or a colon.
 - Front matter needs `title`, `summary`, `date`, `tags`. `minutes` is optional.
 - Exactly one `## ` heading per section, 6 to 9 sections. Section one is always

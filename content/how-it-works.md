@@ -98,6 +98,8 @@ Prose, a table, or a diagram.
 | Marker | Renders as | Use it for |
 | --- | --- | --- |
 | `> [!TLDR]` | Plum box | The one sentence someone in a hurry needs |
+| `> [!TERMS]` | Dashed box | Plain-English definitions of the words the doc uses |
+| `> [!ANALOGY]` | Amber italic box | An everyday comparison for a big idea |
 | `> [!STEPS]` | Blue box | An ordered procedure, 3 to 7 steps |
 | `> [!NUANCE]` | Grey box | Tradeoffs, rejected options, edge cases |
 | `> [!INTERVIEW]` | Amber box | The question someone will ask and the one-line answer |
