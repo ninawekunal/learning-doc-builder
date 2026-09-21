@@ -5,6 +5,7 @@ date: 2026-09-17
 part: 6
 series: Data Tables in React
 tags: [filters, url-state, dates]
+topic: Data tables in React
 minutes: 11
 ---
 

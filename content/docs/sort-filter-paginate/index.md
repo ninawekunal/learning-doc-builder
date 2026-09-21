@@ -5,6 +5,7 @@ date: 2026-09-20
 part: 2
 series: Data Tables in React
 tags: [tanstack-table, react-query, shadcn, interviews]
+topic: Data tables in React
 minutes: 15
 ---
 

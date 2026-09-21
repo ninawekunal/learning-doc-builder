@@ -5,6 +5,7 @@ date: 2026-09-17
 part: 2
 series: Dissecting Problem Statements
 tags: [problem-solving, interviews, debugging]
+topic: Interview prep
 minutes: 15
 ---
 

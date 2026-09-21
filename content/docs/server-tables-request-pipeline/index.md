@@ -5,6 +5,7 @@ date: 2026-09-17
 part: 3
 series: Data Tables in React
 tags: [bff, react-router, security, caching]
+topic: Data tables in React
 minutes: 9
 ---
 

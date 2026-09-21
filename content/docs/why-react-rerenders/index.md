@@ -5,6 +5,7 @@ date: 2026-09-17
 part: 1
 series: React Rendering
 tags: [react, rendering, performance]
+topic: React fundamentals
 minutes: 8
 ---
 

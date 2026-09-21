@@ -5,6 +5,7 @@ date: 2026-09-17
 part: 2
 series: How Learning Works
 tags: [learning, memory, study]
+topic: Learning science
 minutes: 6
 ---
 

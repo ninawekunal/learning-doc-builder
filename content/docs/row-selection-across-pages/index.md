@@ -5,6 +5,7 @@ date: 2026-09-17
 part: 10
 series: Data Tables in React
 tags: [tanstack-table, selection, react-compiler]
+topic: Data tables in React
 minutes: 8
 ---
 

@@ -5,6 +5,7 @@ date: 2026-09-17
 part: 5
 series: Data Tables in React
 tags: [filters, shadcn, state-design]
+topic: Data tables in React
 minutes: 9
 ---
 

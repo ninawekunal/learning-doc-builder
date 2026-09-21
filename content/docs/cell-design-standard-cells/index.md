@@ -5,6 +5,7 @@ date: 2026-09-17
 part: 8
 series: Data Tables in React
 tags: [ux, tanstack-table, formatting]
+topic: Data tables in React
 minutes: 8
 ---
 

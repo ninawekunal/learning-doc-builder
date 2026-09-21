@@ -5,6 +5,7 @@ date: 2026-09-17
 part: 14
 series: Data Tables in React
 tags: [virtualization, performance, testing]
+topic: Data tables in React
 minutes: 11
 ---
 

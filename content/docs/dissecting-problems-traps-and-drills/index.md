@@ -5,6 +5,7 @@ date: 2026-09-17
 part: 3
 series: Dissecting Problem Statements
 tags: [problem-solving, interviews, practice]
+topic: Interview prep
 minutes: 16
 ---
 

@@ -5,6 +5,7 @@ date: 2026-09-17
 part: 2
 series: React From Memory
 tags: [react, hooks, interviews]
+topic: React fundamentals
 minutes: 13
 ---
 

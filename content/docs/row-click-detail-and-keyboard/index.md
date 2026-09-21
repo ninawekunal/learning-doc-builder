@@ -5,6 +5,7 @@ date: 2026-09-17
 part: 12
 series: Data Tables in React
 tags: [ux, accessibility, react-router]
+topic: Data tables in React
 minutes: 8
 ---
 

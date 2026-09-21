@@ -1,25 +1,28 @@
-import type { ReactNode } from 'react'
-import { Link, NavLink } from 'react-router-dom'
-import { ReaderControls } from '@/components/reader-controls'
-import { cn } from '@/lib/cn'
-import { site } from '@/site'
+import type { ReactNode } from "react";
+import { Link, NavLink } from "react-router-dom";
+import { ReaderControls } from "@/components/reader-controls";
+import { GithubIcon } from "@/components/ui/icon";
+import { cn } from "@/lib/cn";
+import { site } from "@/site";
 
 type LayoutProps = {
-  children: ReactNode
-  bionic: boolean
-  onToggleBionic: () => void
-}
+  children: ReactNode;
+  bionic: boolean;
+  onToggleBionic: () => void;
+};
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
   cn(
-    'cursor-pointer whitespace-nowrap rounded-lg px-2 py-1.5 text-[13px] font-medium transition-colors sm:px-2.5',
-    isActive ? 'bg-[var(--surface-2)] text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]',
-  )
+    "cursor-pointer whitespace-nowrap rounded-lg px-1.5 py-1.5 text-[13px] font-medium transition-colors sm:px-2.5",
+    isActive
+      ? "bg-[var(--surface-2)] text-[var(--text)]"
+      : "text-[var(--text-muted)] hover:text-[var(--text)]",
+  );
 
 export const Layout = ({ children, bionic, onToggleBionic }: LayoutProps) => (
   <div className="min-h-dvh">
     <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-1 px-3 sm:gap-2 sm:px-4">
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-0.5 px-2 sm:gap-2 sm:px-4">
         <Link
           to="/"
           className="mr-0.5 cursor-pointer whitespace-nowrap text-[14px] font-semibold tracking-tight text-[var(--text)] sm:mr-1 sm:text-[15px]"
@@ -29,7 +32,8 @@ export const Layout = ({ children, bionic, onToggleBionic }: LayoutProps) => (
         </Link>
         <nav className="flex items-center gap-0.5">
           <NavLink to="/docs" className={navClass}>
-            Docs
+            <span className="sm:hidden">Docs</span>
+            <span className="hidden sm:inline">Published docs</span>
           </NavLink>
           {site.showBlog && (
             <NavLink to="/blog" className={navClass}>
@@ -37,11 +41,22 @@ export const Layout = ({ children, bionic, onToggleBionic }: LayoutProps) => (
             </NavLink>
           )}
           <NavLink to="/how-it-works" className={navClass}>
-            {site.aboutLabel}
+            <span className="sm:hidden">Guide</span>
+            <span className="hidden sm:inline">{site.aboutLabel}</span>
           </NavLink>
         </nav>
-        <div className="ml-auto shrink-0">
+        <div className="ml-auto flex shrink-0 items-center gap-1">
           <ReaderControls bionic={bionic} onToggleBionic={onToggleBionic} />
+          <a
+            href={site.repoUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Open the source on GitHub"
+            title="Source on GitHub"
+            className="cursor-pointer rounded-lg p-1 text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)] sm:p-1.5"
+          >
+            <GithubIcon className="size-[18px]" />
+          </a>
         </div>
       </div>
     </header>
@@ -49,14 +64,11 @@ export const Layout = ({ children, bionic, onToggleBionic }: LayoutProps) => (
     <main className="mx-auto max-w-6xl px-4 pb-24 pt-8">{children}</main>
 
     <footer className="border-t border-[var(--border)] py-8 text-center text-[13px] text-[var(--text-muted)]">
-      {site.footer} Built with the{' '}
-      <a
-        className="cursor-pointer text-[var(--primary)]"
-        href="https://github.com/ninawekunal/learning-doc-builder"
-      >
+      {site.footer} Built with the{" "}
+      <a className="cursor-pointer text-[var(--primary)]" href={site.repoUrl}>
         learning-doc-builder
-      </a>{' '}
+      </a>{" "}
       skill. MIT licensed.
     </footer>
   </div>
-)
+);

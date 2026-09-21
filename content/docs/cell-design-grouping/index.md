@@ -5,6 +5,7 @@ date: 2026-09-17
 part: 7
 series: Data Tables in React
 tags: [ux, tanstack-table, columns]
+topic: Data tables in React
 minutes: 8
 ---
 
