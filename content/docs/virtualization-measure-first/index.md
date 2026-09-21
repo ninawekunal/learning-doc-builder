@@ -5,7 +5,7 @@ date: 2026-09-17
 part: 13
 series: Data Tables in React
 tags: [virtualization, performance, profiling]
-minutes: 7
+minutes: 8
 ---
 
 > [!TERMS]
@@ -17,26 +17,44 @@ minutes: 7
 > - **Profiler** - a React component that reports how long its children took to render.
 > - **Seeded random generator** - a random number maker that gives the same sequence every time you start it with the same seed.
 
+## The big picture
+
 > [!TLDR]
 > Virtualization is the last tool to reach for, not the first.
-> Measure first. Most slow tables are fixed by paging or a "Show more" button.
+> This part covers the two moves that fix most slow tables without it: measuring, then paging or capping.
 
 > [!ANALOGY]
 > A slow table is like a car that feels sluggish.
 > You check the tyre pressure and the handbrake before you rebuild the engine.
 > Virtualization is the engine rebuild.
 
+The Executions tape shows every trade fill for one day: 50,000 rows in one scrollable panel, arriving through the day.
+The first version put all 50,000 rows in the DOM at once, and the browser tab froze.
+That looks like a textbook case for a virtualizer, and it might be, but two cheaper moves come first.
+
+Table: each row is one move in this part, in the order you try it, and what it buys you.
+
+| Move                 | What it buys you                           | When it is not enough                          |
+| -------------------- | ------------------------------------------ | ---------------------------------------------- |
+| Measure              | Two real numbers instead of a guess        | Numbers alone fix nothing by themselves        |
+| Page or cap          | Removes almost every mounted row, for free | The user needs one continuous, un-paged scroll |
+| Virtualize (Part 14) | Handles the one case nothing else can      | Real implementation and testing cost           |
+
+Only the third row is expensive, and it is where the next part picks up.
+This part stays on the first two, which solve most slow tables outright.
+
+> [!RECAP]
+>
+> - Reach for a virtualizer last, after measuring and after the cheaper fixes.
+> - Measuring, then paging or capping, solves most slow tables on their own.
+
 ## When not to virtualize
 
 > [!TLDR]
 > Only an un-paged list of heavy rows that people scroll through continuously earns a virtualizer.
 
-The Executions tape shows every trade fill for one day: 50,000 rows in one scrollable panel, arriving through the day.
-Any fill can expand to show its parent order, so rows are not all the same height.
-The first version put all 50,000 rows in the DOM, and the browser tab froze.
-
-That sounds like a clear case for virtualization.
-It might be. But first you ask three questions.
+Any fill on the tape can expand to show its parent order, so rows are not all the same height either.
+Ask three questions before you reach for a virtualizer.
 
 ![A decision flow: a paginated list stops at pagination, light rows or a searched list get a render cap, and only an un-paginated list of heavy rows that people scroll through gets virtualized](./images/virtualize-decision.png "A decision flow: paged lists stop at paging, light rows get a Show more cap, only long un-paged lists of heavy rows get virtualized.")
 
@@ -113,7 +131,7 @@ const mounted = document.querySelectorAll("tbody tr").length;
 > [!TLDR]
 > Keeping 50,000 rows _in memory_ is fine.
 > Putting 50,000 `<tr>` elements _in the DOM_ is not.
-> Paging and a "Show more" cap both fix the second without any scroll maths.
+> Paging and a "Show more" cap both fix the second without any scroll math.
 
 Paging you already know from earlier parts: only one page of rows ever reaches the DOM.
 The render cap is even simpler. It keeps a number, and draws that many rows.
@@ -148,7 +166,7 @@ const [visibleCount, setVisibleCount] = useState(20);
 > - Choosing "no virtualizer" for a 455-row feed is a good decision, not a lazy one. Hand-built virtualizers are a known maintenance headache.
 
 > [!WIN]-
-> One `useState` and one button took the recent fills panel from 2,676 mounted rows to 20, with no scroll maths to maintain.
+> One `useState` and one button took the recent fills panel from 2,676 mounted rows to 20, with no scroll math to maintain.
 
 > [!RECAP]
 >
@@ -163,7 +181,7 @@ const [visibleCount, setVisibleCount] = useState(20);
 > - Ask three questions first: is it un-paged, are rows heavy, is it one continuous scroll.
 > - Measure mounted rows and render time before you change anything.
 > - Data in memory is cheap; mounted DOM rows are what hurt.
-> - Paging or a Show more cap fixes most slow tables with no scroll maths.
+> - Paging or a Show more cap fixes most slow tables with no scroll math.
 
 ```quiz
 [
@@ -176,7 +194,7 @@ const [visibleCount, setVisibleCount] = useState(20);
       "Replace pagination with an infinite scroll instead"
     ],
     "answer": 0,
-    "expl": "A paginated table already caps mounted rows. The cost is almost certainly elsewhere, so measure mounted rows and render time before adding scroll maths."
+    "expl": "A paginated table already caps mounted rows. The cost is almost certainly elsewhere, so measure mounted rows and render time before adding scroll math."
   },
   {
     "q": "A side panel lists recent fills, usually a few hundred, light rows. What fits best?",
@@ -187,7 +205,7 @@ const [visibleCount, setVisibleCount] = useState(20);
       "Mounting all rows with content-visibility auto"
     ],
     "answer": 2,
-    "expl": "Light rows in a bounded panel only need a cap. It adds no scroll maths and fetches nothing, while server paging adds a round trip the panel does not need."
+    "expl": "Light rows in a bounded panel only need a cap. It adds no scroll math and fetches nothing, while server paging adds a round trip the panel does not need."
   },
   {
     "q": "A teammate says: 'We hold 50,000 fills in a JavaScript array, so the table will always be slow.' What is the accurate pushback?",
@@ -236,6 +254,28 @@ const [visibleCount, setVisibleCount] = useState(20);
     ],
     "multi": true,
     "expl": "A paged list or light rows each answer 'no' to one of the three questions, so paging or a cap is enough. An unbroken scroll of heavy rows is the case that earns a virtualizer, and a sticky header says nothing either way."
+  },
+  {
+    "q": "A 'Show 20 more' button on the recent fills panel calls the BFF for the next 20 rows on every click, even though all 2,676 fills already loaded once. What is wrong with that?",
+    "options": [
+      "It's fine, always fetch fresh data on click",
+      "It should virtualize instead of showing a cap",
+      "It refetches data that's already in memory",
+      "It should switch to real pagination instead"
+    ],
+    "answer": 2,
+    "expl": "A render cap only needs to reveal more of an array that is already in memory, so refetching wastes a round trip for data you already have. Real pagination is a fine design when the whole list is not preloaded, but that is not the case here."
+  },
+  {
+    "q": "A compliance log lists 1,200 trade corrections, no filters, un-paged, and staff scroll the whole thing top to bottom during an audit. Rows are plain text. Does it need a virtualizer?",
+    "options": [
+      "Yes, the list is un-paged and scrolled continuously",
+      "Yes, 1,200 rows always need more than a cap",
+      "No, 1,200 rows always fit on just one page",
+      "No, two yes answers are still not enough here"
+    ],
+    "answer": 3,
+    "expl": "Two of the three questions point toward virtualizing: the list is un-paged and read continuously. But the rows are plain text, not heavy, so the third question answers no, and a render cap or paging alone likely solves this instead."
   }
 ]
 ```
