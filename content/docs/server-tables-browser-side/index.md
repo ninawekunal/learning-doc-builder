@@ -19,9 +19,38 @@ minutes: 9
 > - **SSR (server-side rendering)** - building the first HTML on the server so the page arrives with content already in it.
 > - **Hydration** - React in the browser attaching itself to that server HTML. Both sides must produce identical HTML.
 
-## One shape, checked on both ends
+## The big picture
 
 [Part 3](#/docs/server-tables-request-pipeline) built the server side: six steps per request, a pure compute file and a per-user cache.
+
+> [!TLDR]
+> The server now owns filtering, sorting and paging.
+> The browser's job shrinks to four things: trust the response shape, keep every choice in the URL, tell TanStack to keep its hands off the rows, and never let a failed request look like an empty table.
+
+Table: each row is a job the browser still has, now that the server does the heavy lifting.
+
+| Browser's job             | Why it still matters                                                            |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| Check the response shape  | A newer server can ship a shape an older open tab does not expect               |
+| Read and write the URL    | A bookmarked or pasted link has to reproduce the exact same view                |
+| Tell TanStack "hands off" | Without the manual flags it re-sorts and re-pages the one page it already holds |
+| Fail loudly               | A broken request and an empty result must never look the same on screen         |
+
+> [!ANALOGY]
+> Part 3 built the kitchen: it decides what goes on the plate.
+> This part is the waiter: it does not cook anything, but it still has to carry the right plate to the right table, in the order the kitchen sent it out, and say so loudly if a plate never arrives.
+
+> [!NUANCE]-
+> The browser is not a dumb pipe.
+> It still owns real state: which sort, which page, which text is in the search box.
+> The difference from part 1 is that none of that state decides _which rows exist_ anymore - only which of the server's rows are on screen right now.
+
+> [!RECAP]
+>
+> - Part 3's BFF now owns sorting, filtering and paging.
+> - The browser's remaining job: trust the shape, own the URL, defer to the server, and fail loudly.
+
+## One shape, checked on both ends
 
 > [!TLDR]
 > Describe the response once with a zod schema.
