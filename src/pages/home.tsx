@@ -9,6 +9,7 @@ import {
 import { Link } from "react-router-dom";
 import { Carousel, CarouselItem } from "@/components/carousel";
 import { EntryCard } from "@/components/entry-card";
+import { HeroCarousel } from "@/components/hero-carousel";
 import { Button } from "@/components/ui/button";
 import { EyePlusIcon } from "@/components/ui/icon";
 import { docs, posts } from "@/lib/content";
@@ -118,21 +119,9 @@ export const Home = () => (
 
     <section className="mt-14">
       <h2 className="text-lg font-semibold tracking-tight">Why it works</h2>
-      <Carousel className="mt-4">
-        {FEATURES.map(({ icon: Icon, title, body }) => (
-          <CarouselItem key={title} className="w-[min(85vw,320px)]">
-            <div className="flex h-full flex-col gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]">
-              <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
-                <Icon className="size-5" aria-hidden />
-              </span>
-              <p className="m-0 text-[16px] font-semibold">{title}</p>
-              <p className="m-0 text-[14px] leading-relaxed text-[var(--text-muted)]">
-                {body}
-              </p>
-            </div>
-          </CarouselItem>
-        ))}
-      </Carousel>
+      <div className="mt-4">
+        <HeroCarousel slides={FEATURES} />
+      </div>
     </section>
 
     {docs.length > 0 && (
