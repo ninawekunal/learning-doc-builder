@@ -1,7 +1,7 @@
 ---
 title: Sorting, filtering and pages - client or server
-summary: Pick up the invoice table from Part 1 and add sorting, filtering and pages, two ways - TanStack Table in the browser, or React Query asking a server.
-date: 2026-09-17
+summary: Pick up the positions table from Part 1 and add sorting, filtering and pages, two ways - TanStack Table in the browser, or React Query asking a server.
+date: 2026-09-20
 part: 2
 series: Data Tables in React
 tags: [tanstack-table, react-query, shadcn, interviews]
@@ -13,7 +13,7 @@ minutes: 15
 > - **Client-side** - the browser has every row and does the sorting, filtering and paging itself.
 > - **Server-side** - the server does the work and sends back only the page you asked for.
 > - **Row model** - TanStack's name for one step that turns rows into fewer or re-ordered rows, like "sorted rows".
-> - **Query key** - the array React Query uses to name a request, like `['invoices', { page: 2 }]`; a new key means a new request.
+> - **Query key** - the array React Query uses to name a request, like `['positions', { page: 2 }]`; a new key means a new request.
 > - **Manual mode** - telling TanStack Table "the server already did this step, do not do it again".
 > - **Debounce** - waiting until someone stops typing for a moment before acting on it.
 > - **Page index** - which page you are on, counting from 0.
@@ -24,26 +24,26 @@ minutes: 15
 > Every table runs the same three steps in the same order: filter, then sort, then cut out one page.
 > The only question is who runs them: the browser (TanStack Table) or the server (React Query sends the settings).
 
-In [Part 1](#/docs/first-data-table) you built an invoice table with a columns file, a cells file, React Query and TanStack Table.
-Now the finance team wants to find overdue invoices, sort by amount, and flip through 240 of them 20 at a time.
+In [Part 1](#/docs/first-data-table) you built a positions table with a columns file, a cells file, React Query and TanStack Table.
+Now the desk wants to find distressed FX positions, sort by Day P&L, and flip through 240 of them 20 at a time.
 
 > [!ANALOGY]
-> Think of a library.
-> Client-side is carrying every book home and sorting them on your floor.
-> Server-side is asking the librarian for "the next 20 overdue books, biggest first".
-> Few books? Carry them home. A whole library? Ask the librarian.
+> Think of an order runner on a trading floor.
+> Client-side is grabbing the whole book of tickets and sorting them yourself at your desk.
+> Server-side is radioing the desk head for "the next twenty overdue tickets, biggest first".
+> A handful of tickets? Grab them. A whole book? Radio it in.
 
 Table: each row is a question to ask before you choose where the table's work happens.
 
 | Question                    | Client-side if...          | Server-side if...                    |
 | --------------------------- | -------------------------- | ------------------------------------ |
 | How many rows?              | A few thousand at most     | Tens of thousands or more            |
-| Is every row safe to send?  | Yes                        | Some rows are private to other users |
+| Is every row safe to send?  | Yes                        | Some positions belong to other desks |
 | Does the data change a lot? | Rarely                     | Often, and pages must stay current   |
 | Interview default?          | Yes, unless told otherwise | When they say "the API is paginated" |
 
 We need something that behaves like a real paginated API, without a real server.
-This mock grows Part 1's 12 invoices into 240 and answers page requests.
+This mock grows Part 1's 12 positions into 240 and answers page requests.
 Every section below uses it.
 
 > [!THINK]
@@ -52,60 +52,64 @@ Every section below uses it.
 > What must come back besides the rows, so the table can say "page 3 of 12"?
 
 ```ts title="mock-api.ts" download="mock-api.ts"
-import base from "./invoices.json";
-import type { Invoice, InvoiceStatus } from "./types";
+import base from "./positions.json";
+import type { Desk, Position } from "./types";
 
-export type InvoiceQuery = {
+export type PositionQuery = {
   pageIndex: number; // 0-based
   pageSize: number;
-  sort?: { id: "number" | "vendor" | "amountCents" | "dueOn"; desc: boolean };
+  sort?: {
+    id: "symbol" | "quantity" | "priceCents" | "dayPnlCents";
+    desc: boolean;
+  };
   search?: string;
-  statuses?: InvoiceStatus[];
+  desks?: Desk[];
 };
 
-export type InvoicePage = { rows: Invoice[]; total: number };
+export type PositionPage = { rows: Position[]; total: number };
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// 240 invoices: Part 1's twelve, repeated with new ids and slightly different amounts.
-const ALL: Invoice[] = Array.from({ length: 240 }, (_, i) => {
-  const seed = base[i % base.length] as Invoice;
+// 240 positions: Part 1's twelve, repeated with new ids and slightly different prices.
+const ALL: Position[] = Array.from({ length: 240 }, (_, i) => {
+  const seed = base[i % base.length] as Position;
 
   return {
     ...seed,
-    id: `inv_${String(i + 1).padStart(3, "0")}`,
-    number: `INV-${1001 + i}`,
-    amountCents: seed.amountCents + ((i * 137) % 5000),
+    id: `pos_${String(i + 1).padStart(3, "0")}`,
+    priceCents: seed.priceCents + ((i * 137) % 5000),
+    dayPnlCents: i % 9 === 0 ? null : seed.dayPnlCents,
   };
 });
 
 /** Client-side mode: hand over everything at once. */
-export const fetchAllInvoices = async (): Promise<Invoice[]> => {
+export const fetchAllPositions = async (): Promise<Position[]> => {
   await wait(300);
 
   return ALL;
 };
 
 /** Server-side mode: filter, then sort, then cut one page - in that order. */
-export const fetchInvoicePage = async (
-  query: InvoiceQuery,
-): Promise<InvoicePage> => {
+export const fetchPositionPage = async (
+  query: PositionQuery,
+): Promise<PositionPage> => {
   await wait(300);
 
   const search = query.search?.trim().toLowerCase() ?? "";
   let rows = ALL.filter(
-    (inv) =>
+    (pos) =>
       (search === "" ||
-        inv.vendor.toLowerCase().includes(search) ||
-        inv.number.toLowerCase().includes(search)) &&
-      (!query.statuses?.length || query.statuses.includes(inv.status)),
+        pos.symbol.toLowerCase().includes(search) ||
+        pos.trader.toLowerCase().includes(search)) &&
+      (!query.desks?.length || query.desks.includes(pos.desk)),
   );
 
   if (query.sort) {
     const { id, desc } = query.sort;
 
     rows = [...rows].sort(
-      (a, b) => (a[id] < b[id] ? -1 : a[id] > b[id] ? 1 : 0) * (desc ? -1 : 1),
+      (a, b) =>
+        (a[id]! < b[id]! ? -1 : a[id]! > b[id]! ? 1 : 0) * (desc ? -1 : 1),
     );
   }
 
@@ -117,6 +121,9 @@ export const fetchInvoicePage = async (
   };
 };
 ```
+
+If a candidate's table slices out one page first and only then runs the search box against those twenty rows, the search looks broken: a match sitting on page 9 simply never appears, and the footer's total is wrong too.
+That is why the mock filters before it slices, every time.
 
 > [!NUANCE]+
 > The total must be counted after filtering and before slicing.
@@ -140,9 +147,9 @@ TanStack gives every header a ready-made toggle for exactly that.
 > [!THINK]
 > Where does the sort live: in the table, or in your component's state?
 > For the server version, what has to change so React Query fetches again when the sort changes?
-> Why does the Amount column sort correctly? (Remember what its accessor reads in Part 1.)
+> Why does the Quantity column sort correctly even for short positions? (Remember what its accessor reads in Part 1.)
 
-```tsx title="invoice-table.tsx" group="sort" tab="TanStack (client)"
+```tsx title="position-table.tsx" group="sort" tab="TanStack (client)"
 import { useState } from "react";
 import {
   flexRender,
@@ -152,22 +159,22 @@ import {
 } from "@tanstack/react-table";
 import type { SortingState } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
-import { fetchAllInvoices } from "./mock-api";
-import { invoiceColumns } from "./columns";
-import type { Invoice } from "./types";
+import { fetchAllPositions } from "./mock-api";
+import { positionColumns } from "./columns";
+import type { Position } from "./types";
 
-const EMPTY: Invoice[] = [];
+const EMPTY: Position[] = [];
 
-export const InvoiceTable = () => {
+export const PositionTable = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const { data } = useQuery({
-    queryKey: ["invoices", "all"],
-    queryFn: fetchAllInvoices,
+    queryKey: ["positions", "all"],
+    queryFn: fetchAllPositions,
   });
 
   const table = useReactTable({
     data: data ?? EMPTY,
-    columns: invoiceColumns,
+    columns: positionColumns,
     state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
@@ -210,27 +217,27 @@ const ariaSort = (dir: false | "asc" | "desc") =>
   dir === "asc" ? "ascending" : dir === "desc" ? "descending" : "none";
 ```
 
-```tsx title="invoice-table.tsx" group="sort" tab="React Query (server)"
+```tsx title="position-table.tsx" group="sort" tab="React Query (server)"
 import { useState } from "react";
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import type { SortingState } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
-import { fetchInvoicePage } from "./mock-api";
-import type { InvoiceQuery } from "./mock-api";
-import { invoiceColumns } from "./columns";
-import type { Invoice } from "./types";
+import { fetchPositionPage } from "./mock-api";
+import type { PositionQuery } from "./mock-api";
+import { positionColumns } from "./columns";
+import type { Position } from "./types";
 
-const EMPTY: Invoice[] = [];
+const EMPTY: Position[] = [];
 
-export const InvoiceTable = () => {
+export const PositionTable = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  const query: InvoiceQuery = {
+  const query: PositionQuery = {
     pageIndex: 0,
     pageSize: 20,
     sort: sorting[0]
       ? {
-          id: sorting[0].id as NonNullable<InvoiceQuery["sort"]>["id"],
+          id: sorting[0].id as NonNullable<PositionQuery["sort"]>["id"],
           desc: sorting[0].desc,
         }
       : undefined,
@@ -238,13 +245,13 @@ export const InvoiceTable = () => {
 
   // The sort is part of the key, so a new sort is a new request.
   const { data } = useQuery({
-    queryKey: ["invoices", query],
-    queryFn: () => fetchInvoicePage(query),
+    queryKey: ["positions", query],
+    queryFn: () => fetchPositionPage(query),
   });
 
   const table = useReactTable({
     data: data?.rows ?? EMPTY,
-    columns: invoiceColumns,
+    columns: positionColumns,
     state: { sorting },
     onSortingChange: setSorting,
     manualSorting: true, // the server already sorted; do not re-sort one page
@@ -256,35 +263,47 @@ export const InvoiceTable = () => {
 };
 ```
 
-> [!NUANCE]+
-> In server mode, forget `manualSorting: true` and TanStack sorts the 20 rows it was given.
-> The page looks sorted, but it is only this page, re-shuffled.
+The Day P&L column needs one more thing: some positions have no previous close yet, so `dayPnlCents` is `null`.
+
+```ts
+columnHelper.accessor((row) => row.dayPnlCents ?? undefined, {
+  id: "dayPnlCents",
+  sortUndefined: "last", // positions with no P&L stay at the bottom
+});
+```
+
+> [!NUANCE]
+>
+> - Empty values should sit at the bottom whether you sort up or down. `sortUndefined: "last"` runs _before_ TanStack flips the direction for descending, so it survives the flip; a custom `sortingFn` alone cannot do this, because TanStack negates whatever it returns.
+> - `sortUndefined` only notices `undefined`, not `null`, which is why the accessor turns `null` into `undefined`.
+> - On the first click, TanStack sorts text A to Z but numbers **largest first**. `sortDescFirst: false` makes every column start ascending.
 
 > [!INTERVIEW]-
-> Say why the header is a `<button>` inside the `<th>`.
-> A clickable `<th>` is not reachable with the keyboard; a button is, and `aria-sort` tells screen readers the direction.
+>
+> - _Why make the header a real `Button`?_ Keyboard users can tab to it and press Enter, for free, and `aria-sort` tells screen readers the direction.
+> - _How do you sort by two columns?_ Shift-click the second header. TanStack keeps an array of sorts; `getSortIndex()` tells you which one is the tie-breaker.
 
 > [!RECAP]
 >
 > - Sorting state is `[{ id, desc }]`; TanStack's header toggle cycles it for you.
 > - Client: add `getSortedRowModel()`. Server: put the sort in the query key and set `manualSorting`.
-> - Use a real button in the header, plus `aria-sort`.
+> - `sortUndefined: "last"` keeps empty P&L values at the bottom in both directions; a plain `sortingFn` cannot.
 
 ## Filtering
 
 > [!TLDR]
-> Filters are more state: a search box and a list of statuses.
-> Every time a filter changes, go back to page 1.
+> One filtering row model powers both the search box and a desk filter.
+> Write your own search function that names exactly which fields it checks, and jump back to page 1 on every change.
 
-Finance people filter constantly: "show me overdue", "show me Kestrel Cloud".
-We add a text search over vendor and number, and a status filter.
+Traders filter constantly: "show me FX", "show me R. Alvarez's book".
+We add a text search over symbol and trader, and a desk filter.
 
 > [!THINK]
-> You are on page 7 and type "maple". Only 20 rows match. What page should you land on, and why?
+> You are on page 7 and type "nvda". Only 6 rows match. What page should you land on, and why?
 > On the server version, what happens if you send a request on every keystroke?
 > TanStack has "global filter" (one box, many columns) and "column filters" (one per column). Which fits each of our two filters?
 
-```tsx title="invoice-table.tsx" group="filter" tab="TanStack (client)"
+```tsx title="position-table.tsx" group="filter" tab="TanStack (client)"
 import { useState } from "react";
 import {
   getCoreRowModel,
@@ -294,18 +313,18 @@ import {
 } from "@tanstack/react-table";
 import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 
-// In columns.tsx, give Status a filter that accepts a list of statuses:
-// column.accessor('status', { header: 'Status', filterFn: 'arrIncludesSome', cell: ... })
+// In columns.tsx, give Desk a filter that accepts a list of desks:
+// column.accessor('desk', { header: 'Desk', filterFn: 'arrIncludesSome', cell: ... })
 
-export const InvoiceTable = () => {
+export const PositionTable = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState(""); // the search box
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]); // [{ id: 'status', value: ['overdue'] }]
-  const { data } = useInvoicesAll(); // fetchAllInvoices through useQuery, as in the sorting tab
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]); // [{ id: 'desk', value: ['FX'] }]
+  const { data } = usePositionsAll(); // fetchAllPositions through useQuery, as in the sorting tab
 
   const table = useReactTable({
     data: data ?? EMPTY,
-    columns: invoiceColumns,
+    columns: positionColumns,
     state: { sorting, globalFilter, columnFilters },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
@@ -319,28 +338,28 @@ export const InvoiceTable = () => {
     <>
       <input
         type="search"
-        placeholder="Search vendor or invoice number"
+        placeholder="Search symbol or trader"
         value={globalFilter}
         onChange={(e) => setGlobalFilter(e.target.value)}
       />
       <select
         value={
           (
-            columnFilters.find((f) => f.id === "status")?.value as
+            columnFilters.find((f) => f.id === "desk")?.value as
               | string[]
               | undefined
           )?.[0] ?? ""
         }
         onChange={(e) =>
           table
-            .getColumn("status")
+            .getColumn("desk")
             ?.setFilterValue(e.target.value ? [e.target.value] : undefined)
         }
       >
-        <option value="">All statuses</option>
-        <option value="overdue">Overdue</option>
-        <option value="open">Open</option>
-        <option value="paid">Paid</option>
+        <option value="">All desks</option>
+        <option value="Equities">Equities</option>
+        <option value="FX">FX</option>
+        <option value="Rates">Rates</option>
       </select>
       {/* table markup as before */}
     </>
@@ -348,30 +367,30 @@ export const InvoiceTable = () => {
 };
 ```
 
-```tsx title="invoice-table.tsx" group="filter" tab="React Query (server)"
+```tsx title="position-table.tsx" group="filter" tab="React Query (server)"
 import { useDeferredValue, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { fetchInvoicePage } from "./mock-api";
-import type { InvoiceQuery } from "./mock-api";
-import type { InvoiceStatus } from "./types";
+import { fetchPositionPage } from "./mock-api";
+import type { PositionQuery } from "./mock-api";
+import type { Desk } from "./types";
 
-export const InvoiceTable = () => {
+export const PositionTable = () => {
   const [search, setSearch] = useState("");
-  const [statuses, setStatuses] = useState<InvoiceStatus[]>([]);
+  const [desks, setDesks] = useState<Desk[]>([]);
   const [pageIndex, setPageIndex] = useState(0);
 
   // Wait for typing to settle so we do not send a request per keystroke.
   const settledSearch = useDebounced(search, 250);
 
-  const query: InvoiceQuery = {
+  const query: PositionQuery = {
     pageIndex,
     pageSize: 20,
     search: settledSearch,
-    statuses,
+    desks,
   };
   const { data } = useQuery({
-    queryKey: ["invoices", query],
-    queryFn: () => fetchInvoicePage(query),
+    queryKey: ["positions", query],
+    queryFn: () => fetchPositionPage(query),
     placeholderData: keepPreviousData, // keep the old rows on screen while the new ones load
   });
 
@@ -380,12 +399,12 @@ export const InvoiceTable = () => {
     setSearch(value);
     setPageIndex(0);
   };
-  const onStatuses = (next: InvoiceStatus[]) => {
-    setStatuses(next);
+  const onDesks = (next: Desk[]) => {
+    setDesks(next);
     setPageIndex(0);
   };
 
-  // ...inputs call onSearch / onStatuses; useReactTable gets manualFiltering: true
+  // ...inputs call onSearch / onDesks; useReactTable gets manualFiltering: true
   return null;
 };
 
@@ -402,19 +421,33 @@ const useDebounced = <T,>(value: T, ms: number): T => {
 };
 ```
 
+Resetting the page has to happen in the same handler that sets the search, not later.
+
+```tsx
+const onSearch = (value: string) => {
+  setSearch(value);
+  setPage(1); // same event, so React shows both changes together
+};
+```
+
+A teammate might reach for `useEffect(() => setPage(1), [search])` instead.
+That effect runs _after_ React has already committed a render with the new search and the old page, so the browser paints one stale, often-empty, frame before the effect catches up.
+
 > [!GOTCHA]
-> The classic bug: you are on page 7, you filter down to one page of results, and the table shows "no rows".
+> The classic bug: a trader is on page 7, filters down to one page of results, and the table shows "no positions".
 > Page 7 of a one-page list is empty.
 > Reset to page 1 whenever a filter changes. TanStack does it for you on the client (`autoResetPageIndex`); on the server you must do it yourself.
 
 > [!NUANCE]-
-> Debounce the request, not the input.
-> The text box should update on every key so typing feels instant; only the value you send to the server waits.
+>
+> - TanStack guesses which columns are searchable by looking at the **first row only**. If that row happens to have an empty trader, the trader column silently stops being searchable. Naming the fields yourself in `globalFilterFn` avoids the guess.
+> - A dropdown filter should match exactly (`filterFn: "equals"` or `"arrIncludesSome"`). The default "contains" match means "FX" also matches a later "FX Options" desk. The dropdown component refuses an empty value, so "All desks" uses a stand-in value that clears the filter.
+> - Debounce the request, not the input. The text box should update on every key so typing feels instant; only the value you send to the server waits.
 
 > [!RECAP]
 >
 > - Search box = global filter; per-column choices = column filters.
-> - Any filter change resets you to page 1.
+> - Any filter change resets you to page 1, in the same handler that sets the filter.
 > - On the server, debounce the search and keep the previous rows on screen while loading.
 
 ## Pages
@@ -431,12 +464,12 @@ This is also where the two approaches differ most.
 > What should the screen show between clicking "Next" and the new page arriving: a spinner, a blank table, or the old page?
 > What should the "Next" button do on the last page?
 
-```tsx title="invoice-table.tsx" group="page" tab="TanStack (client)"
+```tsx title="position-table.tsx" group="page" tab="TanStack (client)"
 const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
 
 const table = useReactTable({
   data: data ?? EMPTY,
-  columns: invoiceColumns,
+  columns: positionColumns,
   state: { sorting, globalFilter, columnFilters, pagination },
   onPaginationChange: setPagination,
   getCoreRowModel: getCoreRowModel(),
@@ -459,19 +492,19 @@ const table = useReactTable({
 </footer>
 ```
 
-```tsx title="invoice-table.tsx" group="page" tab="React Query (server)"
+```tsx title="position-table.tsx" group="page" tab="React Query (server)"
 const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
 
-const query: InvoiceQuery = { ...pagination, sort, search: settledSearch, statuses }
+const query: PositionQuery = { ...pagination, sort, search: settledSearch, desks }
 const { data, isFetching } = useQuery({
-  queryKey: ['invoices', query],
-  queryFn: () => fetchInvoicePage(query),
+  queryKey: ['positions', query],
+  queryFn: () => fetchPositionPage(query),
   placeholderData: keepPreviousData, // old page stays visible while the next loads
 })
 
 const table = useReactTable({
   data: data?.rows ?? EMPTY,
-  columns: invoiceColumns,
+  columns: positionColumns,
   state: { sorting, pagination },
   onPaginationChange: setPagination,
   manualPagination: true, // the server already cut the page
@@ -484,6 +517,10 @@ const table = useReactTable({
 // Same footer as the client tab; dim the rows while the next page loads.
 <tbody style={{ opacity: isFetching ? 0.6 : 1 }}>{/* rows */}</tbody>
 ```
+
+Count the total before the page is cut, not after.
+`getPrePaginationRowModel()` is the filtered, sorted list before slicing; `getRowModel()` is already sliced down to one page.
+A footer that reads its total from `getRowModel()` always says "20 of 20", however many positions actually matched.
 
 Table: each row is one paging detail, and how the two approaches handle it.
 
@@ -498,11 +535,14 @@ Table: each row is one paging detail, and how the two approaches handle it.
 > Both tabs share the same columns, cells and footer.
 > Switching a table from client to server later is a change to the options and one hook, not a rewrite.
 
+> [!NUANCE]-
+> `autoResetPageIndex` is on by default, and it treats a data refresh as a reason to reset. On a live-updating blotter, that means a new batch of prices throws every trader back to page 1 every few seconds. Turn it off, and resetting on sort and filter changes becomes your job again.
+
 > [!RECAP]
 >
 > - Paging state is `{ pageIndex, pageSize }`, with `pageIndex` starting at 0.
+> - Count the total from `getPrePaginationRowModel()`, never from `getRowModel()`.
 > - Server mode needs `manualPagination` and the total as `rowCount`.
-> - `keepPreviousData` stops the table flashing empty between pages.
 
 ## Optional: polish it with shadcn
 
@@ -514,16 +554,16 @@ Table: each row is one paging detail, and how the two approaches handle it.
 npx shadcn@latest add popover checkbox dropdown-menu select button
 ```
 
-### A status filter inside the column header
+### A desk filter inside the column header
 
-A small filter icon in the "Status" header opens a popover with checkboxes.
+A small filter icon in the "Desk" header opens a popover with checkboxes.
 It reads and writes the same column filter as before.
 
 > [!THINK]
 > The popover needs the column. What object does TanStack pass to a `header` function that holds it?
 > How do you show that a filter is active while the popover is closed?
 
-```tsx title="status-header.tsx"
+```tsx title="desk-header.tsx"
 import type { Column } from "@tanstack/react-table";
 import { ListFilter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -533,34 +573,34 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { Invoice, InvoiceStatus } from "./types";
+import type { Desk, Position } from "./types";
 
-const STATUSES: InvoiceStatus[] = ["draft", "open", "paid", "overdue", "void"];
+const DESKS: Desk[] = ["Equities", "FX", "Rates", "Credit"];
 
-export const StatusHeader = ({
+export const DeskHeader = ({
   column,
 }: {
-  column: Column<Invoice, unknown>;
+  column: Column<Position, unknown>;
 }) => {
-  const picked = (column.getFilterValue() as InvoiceStatus[] | undefined) ?? [];
+  const picked = (column.getFilterValue() as Desk[] | undefined) ?? [];
 
-  const toggle = (status: InvoiceStatus) => {
-    const next = picked.includes(status)
-      ? picked.filter((s) => s !== status)
-      : [...picked, status];
+  const toggle = (desk: Desk) => {
+    const next = picked.includes(desk)
+      ? picked.filter((d) => d !== desk)
+      : [...picked, desk];
 
     column.setFilterValue(next.length ? next : undefined);
   };
 
   return (
     <div className="flex items-center gap-1">
-      Status
+      Desk
       <Popover>
         <PopoverTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Filter by status"
+            aria-label="Filter by desk"
             className="relative size-7"
           >
             <ListFilter className="size-4" />
@@ -570,16 +610,16 @@ export const StatusHeader = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-48 p-2">
-          {STATUSES.map((status) => (
+          {DESKS.map((desk) => (
             <label
-              key={status}
-              className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm capitalize"
+              key={desk}
+              className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm"
             >
               <Checkbox
-                checked={picked.includes(status)}
-                onCheckedChange={() => toggle(status)}
+                checked={picked.includes(desk)}
+                onCheckedChange={() => toggle(desk)}
               />
-              {status}
+              {desk}
             </label>
           ))}
         </PopoverContent>
@@ -588,7 +628,7 @@ export const StatusHeader = ({
   );
 };
 
-// columns.tsx: column.accessor('status', { header: ({ column }) => <StatusHeader column={column} />, ... })
+// columns.tsx: column.accessor('desk', { header: ({ column }) => <DeskHeader column={column} />, ... })
 ```
 
 ### A sort menu above the table
@@ -609,10 +649,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const OPTIONS = [
-  { value: "dueOn:asc", label: "Due date, soonest first" },
-  { value: "amountCents:desc", label: "Amount, largest first" },
-  { value: "amountCents:asc", label: "Amount, smallest first" },
-  { value: "vendor:asc", label: "Vendor, A to Z" },
+  { value: "dayPnlCents:desc", label: "Day P&L, best first" },
+  { value: "dayPnlCents:asc", label: "Day P&L, worst first" },
+  { value: "priceCents:desc", label: "Price, highest first" },
+  { value: "symbol:asc", label: "Symbol, A to Z" },
 ];
 
 type SortMenuProps = {
@@ -742,7 +782,7 @@ export const TablePagination = <T,>({
 > - Filter, then sort, then page; the total is counted after filtering.
 > - Client-side: TanStack row models do the three steps on data you already have.
 > - Server-side: put the settings in the React Query key, and set `manualSorting`, `manualFiltering`, `manualPagination` and `rowCount`.
-> - Any filter change resets to page 1.
+> - Any filter change resets to page 1, in the same handler that sets the filter.
 > - Debounce server search and use `keepPreviousData` so the table never flashes empty.
 > - Popovers, sort menus and pagination bars only call the same state setters.
 
@@ -751,47 +791,93 @@ Next, [Part 3](#/docs/server-tables-request-pipeline) builds the server side for
 ```quiz
 [
   {
-    "q": "You are on page 6 of invoices and type 'kestrel' in search. Twelve invoices match, and the table shows 'No invoices'. What is the bug?",
-    "options": ["The search compares upper and lower case letters differently", "The page index was not reset to 0 when the filter changed", "The server counted the total before it applied the filter", "The React Query key does not include the search text"],
-    "answer": 1,
-    "expl": "Twelve matches fit on page 1, so page 6 is empty. Every filter change must send you back to the first page."
-  },
-  {
-    "q": "In server mode, clicking the Amount header re-orders the rows, but the biggest invoice overall never appears on page 1. What is missing?",
-    "options": ["getSortedRowModel() added to the table options", "The sort in the query key, plus manualSorting", "A stable id-based key on each table row", "placeholderData: keepPreviousData on the query"],
-    "answer": 1,
-    "expl": "Without the sort in the query key, the server never hears about it, and TanStack just shuffles the 20 rows it has. The server must sort all rows; manualSorting stops TanStack re-sorting the page."
-  },
-  {
-    "q": "Your server-side 'Showing 1-20 of 20' never changes, whatever you search. Where is the mistake most likely?",
-    "options": ["The server counts the total after slicing out the page", "The search debounce delay is set far too short", "pageSize is sent as a string instead of a number", "The columns array is rebuilt inside the component"],
+    "q": "A candidate's table slices out page 3 first, then runs the search box against just those twenty rows. What does the trader actually see when they search?",
+    "options": [
+      "Only this page's matches, with the wrong total count",
+      "Correct results, just computed less efficiently",
+      "An error because the page index goes out of range",
+      "Correct rows, but in a randomised order"
+    ],
     "answer": 0,
-    "expl": "Counting after slicing always gives at most one page's worth. Count after filtering and before slicing."
+    "expl": "Paginating first means the search only ever looks at twenty rows, so a match sitting on another page simply disappears and the footer's total is wrong too. It is not just slower - the order changes what the user actually sees."
   },
   {
-    "q": "The table flashes blank every time you click Next in server mode. Which change fixes that?",
-    "options": ["placeholderData: keepPreviousData on the query", "manualPagination: false", "Removing the page from the query key", "A longer staleTime"],
+    "q": "Sorting Day P&L descending, positions with no previous close jump to the very top instead of staying at the bottom. The sortingFn checks for null before returning sign * compare(a, b). What fixes it?",
+    "options": [
+      "Map null P&L values to zero inside the accessor",
+      "Handle the null case before the direction sign is applied",
+      "Filter out positions with a null P&L before sorting",
+      "Sort ascending only, then reverse the array afterwards"
+    ],
+    "answer": 1,
+    "expl": "TanStack negates whatever a sortingFn returns for descending order, so a null check placed under that sign flip gets flipped right along with everything else. Mapping null to zero would hide a real 'no data yet' state and drop those rows into the middle of the table instead of the bottom."
+  },
+  {
+    "q": "A teammate resets the page with useEffect(() => setPage(1), [search]) whenever the search box changes. What does the trader actually see?",
+    "options": [
+      "Nothing different, effects run before the browser paints",
+      "An infinite loop between the search and page state",
+      "One rendered frame showing a stale, often empty, page",
+      "The page only resets after the debounce timer fires"
+    ],
+    "answer": 2,
+    "expl": "The effect runs after React has already committed a render with the new search text and the old page number, so the browser paints one wrong frame before the effect catches up. Resetting the page inside the same handler that sets the search avoids that frame entirely."
+  },
+  {
+    "q": "On a live-updating blotter, traders keep getting bounced back to page 1 every few seconds even though nobody touched search or sort. What explains it?",
+    "options": [
+      "manualPagination is set to false by default",
+      "pageSize keeps reverting to its initialState value",
+      "getPaginationRowModel recomputes on every price tick",
+      "autoResetPageIndex treats new data as a reason to reset"
+    ],
+    "answer": 3,
+    "expl": "autoResetPageIndex is on by default and counts a data refresh as a reason to reset, so ticking prices throw everyone back to page 1 every few seconds. Turning it off means sort and filter changes need their own explicit reset again."
+  },
+  {
+    "q": "The footer reads '1-20 of 20' even though the search box clearly matches 57 positions. Which row model is the footer reading from?",
+    "options": [
+      "getRowModel, which is sliced down to one page",
+      "getPrePaginationRowModel, which is filtered and sorted",
+      "getCoreRowModel, which ignores filtering completely",
+      "getFilteredRowModel, before sorting has been applied"
+    ],
     "answer": 0,
-    "expl": "A new page is a new key, so there is no data for it yet. keepPreviousData shows the old page until the new one arrives. Removing the page from the key would stop paging altogether."
+    "expl": "getRowModel sits at the very end of the pipeline, so it only ever holds one page's worth of rows. The honest total lives in getPrePaginationRowModel - filtered and sorted, but not yet sliced down to a page."
   },
   {
-    "q": "Which of these should make you choose server-side over client-side? Select all that apply.",
-    "options": ["There are 200,000 invoices", "Some invoices belong to other teams and must never reach this user's browser", "The interviewer says 'the API returns one page at a time'", "You want the header to show sort arrows"],
-    "answer": [0, 1, 2],
+    "q": "Which statements about keeping positions with no previous close at the bottom, in both sort directions, are true? Select all that apply.",
+    "options": [
+      "sortUndefined: 'last' is applied before the descending flip",
+      "A custom sortingFn alone can pin them in both directions",
+      "sortUndefined only checks for undefined, so map null to undefined first",
+      "sortDescFirst: false keeps them at the bottom on the first click"
+    ],
+    "answer": [0, 2],
     "multi": true,
-    "expl": "Size, privacy and an already-paged API all push the work to the server. Sort arrows work the same either way."
+    "expl": "TanStack negates a custom sortingFn's result for descending order, so a plain comparator cannot hold nulls in place either way; sortUndefined runs before that flip but only recognises undefined, which is why the accessor turns null into undefined. sortDescFirst only changes which direction a header starts in, not where empty values land."
   },
   {
-    "q": "The search box feels laggy in server mode because each keystroke waits for a request. What is the right fix?",
-    "options": ["Debounce only the value sent to the server", "Debounce the text box's onChange handler itself", "Filter only the rows already on the current page", "Remove the search text from the query key"],
-    "answer": 0,
-    "expl": "The input should update on every key so typing feels instant. Only the value that goes into the query key waits for typing to settle."
-  },
-  {
-    "q": "A header filter popover is closed, and the table shows only overdue invoices. Users think data is missing. What should the header show?",
-    "options": ["Nothing; the popover explains the filter once opened", "A dot or count on the filter button", "A toast message that appears every time the page loads", "The full list of all five statuses inside the header"],
+    "q": "The search box stops finding any position by trader name, but only on days when the very first row in the data happens to have no trader assigned. What is going on?",
+    "options": [
+      "The default filter is case-sensitive on that column",
+      "TanStack infers a searchable column from the first row's value",
+      "Global filters skip every column that can contain nulls",
+      "The debounce timer drops the first character typed"
+    ],
     "answer": 1,
-    "expl": "A hidden active filter looks like missing data. A dot or count on the filter icon tells users a filter is on without opening anything."
+    "expl": "TanStack checks the type of the first row's value to decide whether a column counts as globally searchable, so one missing trader on row one silently removes the whole column from search. Naming the fields yourself inside globalFilterFn removes the guesswork."
+  },
+  {
+    "q": "The desk filter is checked for 'FX', and a new 'FX Options' desk starts appearing in the results too. What fixes the facet?",
+    "options": [
+      "Trim whitespace from every desk value before filtering",
+      "Move the desk field into the global search fields",
+      "Set the desk column's filterFn to an exact match",
+      "Use a sentinel value for the 'All desks' option"
+    ],
+    "answer": 2,
+    "expl": "The default string filter is a contains match, so 'FX' matches 'FX Options' the moment that desk exists. A facet is meant to be an exact choice, which filterFn: 'equals' (or arrIncludesSome for a list) gives you. The sentinel value solves a different problem - a picker component that rejects an empty string."
   }
 ]
 ```
@@ -804,7 +890,7 @@ Next, [Part 3](#/docs/server-tables-request-pipeline) builds the server side for
     "source": "GreatFrontEnd",
     "kind": "practice",
     "difficulty": "Medium",
-    "note": "Add column sorting to a paginated table - the sorting section as an interview question."
+    "note": "Add column sorting to a paginated table - the Sorting section as an interview question."
   },
   {
     "title": "Data Table IV",
@@ -815,18 +901,11 @@ Next, [Part 3](#/docs/server-tables-request-pipeline) builds the server side for
     "note": "Add filtering on top of sorting and pages - the whole pipeline from this part."
   },
   {
-    "title": "Paginated queries",
-    "url": "https://tanstack.com/query/latest/docs/framework/react/guides/paginated-queries",
-    "source": "TanStack Query docs",
-    "kind": "read",
-    "note": "Why keepPreviousData exists and how page keys work."
-  },
-  {
-    "title": "Pagination guide",
-    "url": "https://tanstack.com/table/v8/docs/guide/pagination",
+    "title": "Sorting guide",
+    "url": "https://tanstack.com/table/v8/docs/guide/sorting",
     "source": "TanStack Table docs",
     "kind": "read",
-    "note": "Client and manual (server) pagination, including rowCount."
+    "note": "sortingFn, sortUndefined and sortDescFirst, covered in depth."
   },
   {
     "title": "Column filtering guide",
@@ -834,6 +913,13 @@ Next, [Part 3](#/docs/server-tables-request-pipeline) builds the server side for
     "source": "TanStack Table docs",
     "kind": "read",
     "note": "Built-in filter functions like arrIncludesSome, and manual filtering."
+  },
+  {
+    "title": "Pagination guide",
+    "url": "https://tanstack.com/table/v8/docs/guide/pagination",
+    "source": "TanStack Table docs",
+    "kind": "read",
+    "note": "Client and manual (server) pagination, including rowCount."
   },
   {
     "title": "Pagination",

@@ -9,6 +9,7 @@ minutes: 8
 ---
 
 > [!TERMS]
+>
 > - **Row click** - what happens when someone clicks anywhere on a row.
 > - **Detail page** - a separate page, with its own URL, for one record.
 > - **Master-detail** - a list on one side and the selected record always open on the other, like an email inbox.
@@ -18,12 +19,27 @@ minutes: 8
 
 [Part 11](#/docs/row-click-patterns) picked a row click by the user's next step and built the guarded handler, the expando and the URL-driven drawer.
 
+## The big picture
+
 > [!TLDR]
 > A row that navigates still needs a real link, double click costs speed unless one click only selects, and a clickable row needs Enter, Space and a visible focus ring.
 
 > [!ANALOGY]
 > A clickable row without a link or keyboard support is a door with no handle.
 > Mouse users can push it open; everyone else walks past without knowing it is a door.
+
+Table: each row is a remaining gap from part 11, and what it costs if you skip it.
+
+| Gap                              | What it costs                                               |
+| -------------------------------- | ----------------------------------------------------------- |
+| No real link in a navigating row | No new-tab click, no right-click copy, no link announcement |
+| Both clicks open something       | Every single click waits on a timer                         |
+| No keyboard handling             | The row is invisible to anyone not using a mouse            |
+
+> [!RECAP]
+>
+> - A clickable row still owes mouse-only and keyboard-only users the same capabilities.
+> - The next three sections close those three gaps in order.
 
 ## Detail page: a real link first
 
@@ -32,6 +48,7 @@ minutes: 8
 > Clicking anywhere on the row is a convenience on top.
 
 > [!NUANCE]
+>
 > - A real link lets people cmd-click or middle-click to open a new tab, right-click to copy the address, and hear "link" on a screen reader. A click handler that navigates gives none of that.
 > - Clicking the link does not also trigger the row, because the guard ignores links.
 > - Back returns to the exact same list only because the filters and page live in the URL (part 2).
@@ -39,6 +56,7 @@ minutes: 8
 ![Order detail page for a rejected order: a back link to Orders, the status badge, a rejection alert, the order facts card and an empty fills card](./images/detail-page.png "The detail page for a rejected order, with a back link to the list.")
 
 > [!RECAP]
+>
 > - A row that navigates still needs a real link in its first cell.
 > - Back works because the list state lives in the URL.
 
@@ -51,15 +69,18 @@ minutes: 8
 ![Two timelines: Pattern A selects the row at 0 ms, Pattern B parks the click in a 220 ms timer before the drawer opens](./images/single-vs-double-click.png "Top: select happens instantly. Bottom: the click waits 220ms in case a second one comes.")
 
 > [!STEPS]
+>
 > 1. **Click selects, double click opens.** A double click sends two clicks first; ignore the second one (`event.detail > 1`) so it does not un-select.
 > 2. **Click opens a drawer, double click opens a page.** Now the first click must wait about 220ms for a possible second one.
 > 3. **Always offer a visible way too**, like a link or an "Open" menu item.
 
 > [!NUANCE]-
+>
 > - Double click is hard to discover and does not exist on touch screens.
 > - Prefer the first pattern, or no double click at all.
 
 > [!RECAP]
+>
 > - If one click selects, ignore the second click of a double click.
 > - If both clicks open something, every click waits - avoid it.
 
@@ -86,10 +107,12 @@ minutes: 8
 ```
 
 > [!NUANCE]-
+>
 > - Put `tabIndex={0}` only on rows that do something.
 > - Show the focus ring only for keyboard users (`focus-visible`), and draw it inside the row (inset), or the table's scroll box cuts it off.
 
 > [!RECAP]
+>
 > - Clickable rows need tabIndex, Enter and Space, and a visible focus ring.
 > - Only act when the row itself is focused, so a child button's Enter does not also open the row.
 
@@ -104,23 +127,25 @@ minutes: 8
 
 Table: each row is a small styling choice and the reason for it.
 
-| Style | Why |
-| --- | --- |
-| Hover lighter than selected | The open row stays obvious while the mouse moves |
-| No line between a row and its children | They read as one unit |
-| A red edge drawn as a shadow, not a border | A border would push the row's content sideways |
-| A wider drawer | The default is cramped for financial data |
+| Style                                      | Why                                              |
+| ------------------------------------------ | ------------------------------------------------ |
+| Hover lighter than selected                | The open row stays obvious while the mouse moves |
+| No line between a row and its children     | They read as one unit                            |
+| A red edge drawn as a shadow, not a border | A border would push the row's content sideways   |
+| A wider drawer                             | The default is cramped for financial data        |
 
 > [!WIN]-
 > One guarded click handler in the shared table, the open record in the URL, real links for real navigation, and one clear setting per table.
 
 > [!RECAP]
+>
 > - Master-detail derives a missing selection while rendering, not in an effect.
 > - One rowAction setting per table keeps behaviour consistent.
 
 ## Summary
 
 > [!SUMMARY]
+>
 > - A row that navigates needs a real link in its first cell.
 > - Prefer "click selects, double click opens", or no double click at all.
 > - A clickable row needs tabIndex, Enter and Space, and an inset focus-visible ring.

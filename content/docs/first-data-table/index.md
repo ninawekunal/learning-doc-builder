@@ -1,7 +1,7 @@
 ---
-title: Your first data table - a finance walkthrough
-summary: Take a small file of invoices and turn it into a real table, step by step, the way you would in a frontend interview.
-date: 2026-09-17
+title: Your first data table - a positions blotter
+summary: Take a small file of trading positions and turn it into a real table, step by step, the way you would in a frontend interview.
+date: 2026-09-20
 part: 1
 series: Data Tables in React
 tags: [tanstack-table, react-query, shadcn, interviews]
@@ -11,10 +11,11 @@ minutes: 14
 > [!TERMS]
 >
 > - **Data table** - a table on screen built from an array of objects, one object per row.
-> - **Row** - one record on screen; here, one invoice.
+> - **Row** - one record on screen; here, one trading position.
 > - **Column definition** - a small object that says how to read one value out of a row and how to draw it.
-> - **Cell** - the small component that draws one value, like an amount or a status.
-> - **Minor units** - money stored as whole cents, so `1250.50` dollars is saved as `125050`.
+> - **Cell** - the small component that draws one value, like a price or a status.
+> - **Position** - a holding a trading desk currently owns; positive quantity is long, negative is short.
+> - **Minor units** - money stored as whole cents, so `227.50` dollars is saved as `22750`.
 > - **React Query (TanStack Query)** - a library that fetches data for you and remembers loading, error and cached results.
 > - **TanStack Table** - a headless table library: it works out rows and columns and draws nothing.
 > - **Headless** - does the logic, leaves the HTML to you.
@@ -27,191 +28,206 @@ minutes: 14
 > We build it in three steps: plain React first, then separate columns and cells, then React Query and TanStack Table.
 
 Here is the task, the way an interviewer might say it.
-"Here is a JSON file of invoices. Show them in a table."
+"Here is a JSON file of positions a trading desk holds. Show them in a table."
 That sounds tiny.
 The interview is really about how you split the work, and whether your code is easy to grow.
 
 > [!ANALOGY]
-> Think of a restaurant.
-> The data is the ingredients, the columns are the menu, and the cells are the plates each dish is served on.
-> If you change a plate, the menu should not have to change.
+> Think of a research desk.
+> The data is the raw feed, the columns are the desk's standard read-out format, and the cells are how one field actually gets printed - a price, a sign, a currency symbol.
+> Change how a price prints and the read-out format itself does not change.
 
 Everything in this series starts from the same data.
 Open it, skim the fields, and download it so you can follow along.
 
-```json title="invoices.json" download="invoices.json"
+```json title="positions.json" download="positions.json"
 [
   {
-    "id": "inv_001",
-    "number": "INV-1001",
-    "vendor": "Northwind Traders",
-    "category": "Software",
-    "amountCents": 125050,
-    "currency": "USD",
-    "status": "paid",
-    "issuedOn": "2026-07-02",
-    "dueOn": "2026-08-01"
-  },
-  {
-    "id": "inv_002",
-    "number": "INV-1002",
-    "vendor": "Blue Harbor Logistics",
-    "category": "Shipping",
-    "amountCents": 842000,
-    "currency": "USD",
-    "status": "overdue",
-    "issuedOn": "2026-06-15",
-    "dueOn": "2026-07-15"
-  },
-  {
-    "id": "inv_003",
-    "number": "INV-1003",
-    "vendor": "Atlas Office Supply",
-    "category": "Office",
-    "amountCents": 18999,
+    "id": "pos_001",
+    "symbol": "AAPL",
+    "desk": "Equities",
+    "trader": "R. Alvarez",
+    "quantity": 5000,
+    "priceCents": 22750,
+    "dayPnlCents": 128500,
     "currency": "USD",
     "status": "open",
-    "issuedOn": "2026-08-20",
-    "dueOn": "2026-09-19"
+    "openedOn": "2026-06-02"
   },
   {
-    "id": "inv_004",
-    "number": "INV-1004",
-    "vendor": "Kestrel Cloud",
-    "category": "Software",
-    "amountCents": 560000,
+    "id": "pos_002",
+    "symbol": "TSLA",
+    "desk": "Equities",
+    "trader": "J. Chen",
+    "quantity": -1200,
+    "priceCents": 24890,
+    "dayPnlCents": -84300,
+    "currency": "USD",
+    "status": "open",
+    "openedOn": "2026-07-15"
+  },
+  {
+    "id": "pos_003",
+    "symbol": "NVDA",
+    "desk": "Equities",
+    "trader": "S. Patel",
+    "quantity": 3400,
+    "priceCents": 122150,
+    "dayPnlCents": 305600,
+    "currency": "USD",
+    "status": "open",
+    "openedOn": "2026-08-01"
+  },
+  {
+    "id": "pos_004",
+    "symbol": "MSFT",
+    "desk": "Rates",
+    "trader": "R. Alvarez",
+    "quantity": 2100,
+    "priceCents": 41830,
+    "dayPnlCents": 18900,
+    "currency": "USD",
+    "status": "closed",
+    "openedOn": "2026-05-20"
+  },
+  {
+    "id": "pos_005",
+    "symbol": "JPM",
+    "desk": "Credit",
+    "trader": "M. Novak",
+    "quantity": 8000,
+    "priceCents": 19640,
+    "dayPnlCents": null,
+    "currency": "USD",
+    "status": "open",
+    "openedOn": "2026-09-19"
+  },
+  {
+    "id": "pos_006",
+    "symbol": "XOM",
+    "desk": "Equities",
+    "trader": "J. Chen",
+    "quantity": -600,
+    "priceCents": 11235,
+    "dayPnlCents": 4100,
+    "currency": "USD",
+    "status": "open",
+    "openedOn": "2026-04-11"
+  },
+  {
+    "id": "pos_007",
+    "symbol": "KO",
+    "desk": "FX",
+    "trader": "S. Patel",
+    "quantity": 15000,
+    "priceCents": 6280,
+    "dayPnlCents": -900,
+    "currency": "USD",
+    "status": "open",
+    "openedOn": "2026-03-30"
+  },
+  {
+    "id": "pos_008",
+    "symbol": "PFE",
+    "desk": "Equities",
+    "trader": "M. Novak",
+    "quantity": 9000,
+    "priceCents": 2940,
+    "dayPnlCents": -1200,
+    "currency": "USD",
+    "status": "closed",
+    "openedOn": "2026-02-14"
+  },
+  {
+    "id": "pos_009",
+    "symbol": "DIS",
+    "desk": "FX",
+    "trader": "R. Alvarez",
+    "quantity": 4200,
+    "priceCents": 11475,
+    "dayPnlCents": 2600,
+    "currency": "USD",
+    "status": "open",
+    "openedOn": "2026-08-25"
+  },
+  {
+    "id": "pos_010",
+    "symbol": "AMZN",
+    "desk": "Equities",
+    "trader": "J. Chen",
+    "quantity": 1800,
+    "priceCents": 19560,
+    "dayPnlCents": 15400,
+    "currency": "USD",
+    "status": "open",
+    "openedOn": "2026-09-10"
+  },
+  {
+    "id": "pos_011",
+    "symbol": "META",
+    "desk": "Equities",
+    "trader": "S. Patel",
+    "quantity": -900,
+    "priceCents": 61200,
+    "dayPnlCents": -22700,
     "currency": "EUR",
     "status": "open",
-    "issuedOn": "2026-08-28",
-    "dueOn": "2026-09-27"
+    "openedOn": "2026-07-02"
   },
   {
-    "id": "inv_005",
-    "number": "INV-1005",
-    "vendor": "Granite Legal LLP",
-    "category": "Legal",
-    "amountCents": 1200000,
-    "currency": "USD",
-    "status": "draft",
-    "issuedOn": "2026-09-05",
-    "dueOn": "2026-10-05"
-  },
-  {
-    "id": "inv_006",
-    "number": "INV-1006",
-    "vendor": "Northwind Traders",
-    "category": "Software",
-    "amountCents": 125050,
-    "currency": "USD",
+    "id": "pos_012",
+    "symbol": "GOOGL",
+    "desk": "Rates",
+    "trader": "M. Novak",
+    "quantity": 2600,
+    "priceCents": 17820,
+    "dayPnlCents": null,
+    "currency": "GBP",
     "status": "open",
-    "issuedOn": "2026-09-02",
-    "dueOn": "2026-10-02"
-  },
-  {
-    "id": "inv_007",
-    "number": "INV-1007",
-    "vendor": "Sunrise Catering",
-    "category": "Meals",
-    "amountCents": 43275,
-    "currency": "USD",
-    "status": "paid",
-    "issuedOn": "2026-08-11",
-    "dueOn": "2026-08-25"
-  },
-  {
-    "id": "inv_008",
-    "number": "INV-1008",
-    "vendor": "Maple Freight",
-    "category": "Shipping",
-    "amountCents": 310500,
-    "currency": "CAD",
-    "status": "overdue",
-    "issuedOn": "2026-07-01",
-    "dueOn": "2026-07-31"
-  },
-  {
-    "id": "inv_009",
-    "number": "INV-1009",
-    "vendor": "Kestrel Cloud",
-    "category": "Software",
-    "amountCents": 560000,
-    "currency": "EUR",
-    "status": "paid",
-    "issuedOn": "2026-07-28",
-    "dueOn": "2026-08-27"
-  },
-  {
-    "id": "inv_010",
-    "number": "INV-1010",
-    "vendor": "Atlas Office Supply",
-    "category": "Office",
-    "amountCents": 7450,
-    "currency": "USD",
-    "status": "void",
-    "issuedOn": "2026-08-03",
-    "dueOn": "2026-09-02"
-  },
-  {
-    "id": "inv_011",
-    "number": "INV-1011",
-    "vendor": "Pinecrest Insurance",
-    "category": "Insurance",
-    "amountCents": 980000,
-    "currency": "USD",
-    "status": "open",
-    "issuedOn": "2026-09-01",
-    "dueOn": "2026-09-30"
-  },
-  {
-    "id": "inv_012",
-    "number": "INV-1012",
-    "vendor": "Sunrise Catering",
-    "category": "Meals",
-    "amountCents": 21890,
-    "currency": "USD",
-    "status": "draft",
-    "issuedOn": "2026-09-10",
-    "dueOn": "2026-09-24"
+    "openedOn": "2026-09-19"
   }
 ]
 ```
 
-Notice two choices in that file.
-Money is `amountCents`, a whole number, because decimals like `0.1 + 0.2` do not add up exactly in JavaScript.
-Dates are plain `YYYY-MM-DD` strings, which sort correctly even as text.
+Notice three choices in that file.
+Money is `priceCents`, a whole number, because decimals like `0.1 + 0.2` do not add up exactly in JavaScript.
+Quantity is a signed number, so a short position like `-1200` reads as a negative, not as text like "(1,200)".
+`dayPnlCents` is sometimes `null`, for a position opened too recently to have a previous close to compare against.
 
 Table: each row is something the interviewer is quietly checking, and how you show it.
 
 | They check      | How you show it                                         |
 | --------------- | ------------------------------------------------------- |
-| Types first     | You write an `Invoice` type before any JSX              |
+| Types first     | You write a `Position` type before any JSX              |
 | Separation      | Columns, cells and data loading live in different files |
 | Real states     | You handle loading, error and "no rows"                 |
-| Money and dates | You format them with `Intl`, never by hand              |
+| Money and signs | You format them with `Intl`, never by hand              |
 
 Start with the type, because every other file leans on it.
 
 ```ts title="types.ts"
-export type InvoiceStatus = "draft" | "open" | "paid" | "overdue" | "void";
+export type Desk = "Equities" | "FX" | "Rates" | "Credit";
+export type PositionStatus = "open" | "closed";
 
-export type Invoice = {
+export type Position = {
   id: string;
-  number: string;
-  vendor: string;
-  category: string;
-  amountCents: number;
-  currency: "USD" | "EUR" | "CAD";
-  status: InvoiceStatus;
-  issuedOn: string; // YYYY-MM-DD
-  dueOn: string; // YYYY-MM-DD
+  symbol: string;
+  desk: Desk;
+  trader: string;
+  quantity: number; // positive is long, negative is short
+  priceCents: number;
+  dayPnlCents: number | null; // null until there is a previous close to compare
+  currency: "USD" | "EUR" | "GBP";
+  status: PositionStatus;
+  openedOn: string; // YYYY-MM-DD
 };
 ```
 
 > [!RECAP]
 >
 > - A data table is data, plus columns, plus a loop that draws rows.
-> - Store money as whole cents and dates as `YYYY-MM-DD`.
-> - Write the `Invoice` type first; everything else uses it.
+> - Store money as whole cents, keep quantity signed, and let a P&L be `null` before there is a previous close.
+> - Write the `Position` type first; everything else uses it.
 
 ## Step 1: get rows on screen with plain React
 
@@ -223,15 +239,15 @@ In a real app the data comes from a server.
 We fake one with a tiny `api.ts` that waits a moment, so loading states are real.
 
 ```ts title="api.ts"
-import invoices from "./invoices.json";
-import type { Invoice } from "./types";
+import positions from "./positions.json";
+import type { Position } from "./types";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const fetchInvoices = async (): Promise<Invoice[]> => {
+export const fetchPositions = async (): Promise<Position[]> => {
   await wait(400);
 
-  return invoices as Invoice[];
+  return positions as Position[];
 };
 ```
 
@@ -241,19 +257,19 @@ export const fetchInvoices = async (): Promise<Invoice[]> => {
 > Where does the list of rows live, and what sets it?
 > What should each `<tr>` use as its `key`?
 
-```tsx title="plain-invoice-table.tsx"
+```tsx title="plain-position-table.tsx"
 import { useEffect, useState } from "react";
-import { fetchInvoices } from "./api";
-import type { Invoice } from "./types";
+import { fetchPositions } from "./api";
+import type { Position } from "./types";
 
-export const PlainInvoiceTable = () => {
-  const [rows, setRows] = useState<Invoice[]>([]);
+export const PlainPositionTable = () => {
+  const [rows, setRows] = useState<Position[]>([]);
   const [status, setStatus] = useState<"loading" | "error" | "done">("loading");
 
   useEffect(() => {
     let cancelled = false;
 
-    fetchInvoices()
+    fetchPositions()
       .then((data) => {
         if (!cancelled) {
           setRows(data);
@@ -269,27 +285,27 @@ export const PlainInvoiceTable = () => {
     };
   }, []);
 
-  if (status === "loading") return <p>Loading invoices…</p>;
-  if (status === "error") return <p role="alert">Could not load invoices.</p>;
-  if (rows.length === 0) return <p>No invoices yet.</p>;
+  if (status === "loading") return <p>Loading positions…</p>;
+  if (status === "error") return <p role="alert">Could not load positions.</p>;
+  if (rows.length === 0) return <p>No positions yet.</p>;
 
   return (
     <table>
       <thead>
         <tr>
-          <th>Number</th>
-          <th>Vendor</th>
-          <th>Amount</th>
+          <th>Symbol</th>
+          <th>Quantity</th>
+          <th>Price</th>
           <th>Status</th>
         </tr>
       </thead>
       <tbody>
-        {rows.map((invoice) => (
-          <tr key={invoice.id}>
-            <td>{invoice.number}</td>
-            <td>{invoice.vendor}</td>
-            <td>{(invoice.amountCents / 100).toFixed(2)}</td>
-            <td>{invoice.status}</td>
+        {rows.map((position) => (
+          <tr key={position.id}>
+            <td>{position.symbol}</td>
+            <td>{position.quantity}</td>
+            <td>{(position.priceCents / 100).toFixed(2)}</td>
+            <td>{position.status}</td>
           </tr>
         ))}
       </tbody>
@@ -303,9 +319,9 @@ But look at what is tangled together: fetching, loading states, the header list,
 Adding one column means editing two places, the `<th>` and the `<td>`.
 That is the smell the next step fixes.
 
-> [!GOTCHA]
-> Use `invoice.id` as the key, never the array index.
-> Once you sort or filter, index `0` points at a different invoice, and React reuses the wrong row.
+> [!NUANCE]
+>
+> - Use `position.id` as the key, never the array index. Once you sort or filter, index `0` points at a different position, and React reuses the wrong row.
 
 > [!INTERVIEW]-
 > Say the `cancelled` flag out loud.
@@ -322,7 +338,7 @@ That is the smell the next step fixes.
 
 > [!TLDR]
 > Put "what columns exist" in `columns.tsx` and "how one value looks" in `cells.tsx`.
-> Then adding a column is one object, and changing how money looks is one component.
+> Then adding a column is one object, and changing how a P&L looks is one component.
 
 A **column definition** answers three questions: what is the header, how do I read the value, and how do I draw it.
 TanStack Table gives you a typed helper for writing them.
@@ -331,12 +347,20 @@ Start with the cells.
 Each one is a tiny component that knows nothing about tables.
 
 > [!THINK]
-> How would you draw `125050` cents in `USD`?
-> Which built-in browser tool formats money and dates for any country?
-> Why keep status colours inside the cell, not the column?
+> How would you show `-1200` shares so a trader instantly reads it as short, not just a small number?
+> Which built-in browser tool formats money and signed numbers for any locale?
+> Why print an explicit `+` or `-` on a P&L that is already colour-coded?
 
 ```tsx title="cells.tsx"
-import type { InvoiceStatus } from "./types";
+import type { PositionStatus } from "./types";
+
+const quantityFormat = new Intl.NumberFormat("en-US", {
+  signDisplay: "exceptZero",
+});
+
+export const QuantityCell = ({ value }: { value: number }) => (
+  <span className="tabular-nums">{quantityFormat.format(value)}</span>
+);
 
 const moneyFormat = (currency: string) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency });
@@ -353,26 +377,33 @@ export const MoneyCell = ({
   </span>
 );
 
-const dateFormat = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-});
+// Colour is never the only signal - a screen reader or a printout still needs the sign.
+export const PnlCell = ({
+  cents,
+  currency,
+}: {
+  cents: number | null;
+  currency: string;
+}) => {
+  if (cents === null) return <span className="tabular-nums">-</span>;
 
-// "2026-09-19" is read as UTC midnight; add T00:00 so it stays the same day everywhere.
-export const DateCell = ({ value }: { value: string }) => (
-  <time dateTime={value}>{dateFormat.format(new Date(`${value}T00:00`))}</time>
-);
+  const amount = moneyFormat(currency).format(Math.abs(cents) / 100);
+  const sign = cents < 0 ? "-" : "+";
 
-const STATUS_LABEL: Record<InvoiceStatus, string> = {
-  draft: "Draft",
-  open: "Open",
-  paid: "Paid",
-  overdue: "Overdue",
-  void: "Void",
+  return (
+    <span className="tabular-nums" data-direction={cents < 0 ? "loss" : "gain"}>
+      {sign}
+      {amount}
+    </span>
+  );
 };
 
-export const StatusCell = ({ status }: { status: InvoiceStatus }) => (
+const STATUS_LABEL: Record<PositionStatus, string> = {
+  open: "Open",
+  closed: "Closed",
+};
+
+export const StatusCell = ({ status }: { status: PositionStatus }) => (
   <span data-status={status}>{STATUS_LABEL[status]}</span>
 );
 ```
@@ -381,46 +412,59 @@ Now the columns.
 Each entry points at a field and hands it to a cell.
 
 > [!THINK]
-> The amount needs two fields, `amountCents` and `currency`.
+> The P&L needs two fields, `dayPnlCents` and `currency`.
 > How can one column's cell reach the rest of the row?
-> Why might you want the column's value to stay a plain number even though it shows as "$1,250.50"?
+> Why might you want the column's value to stay a plain signed number even though it shows as "-1,200"?
 
 ```tsx title="columns.tsx"
 import { createColumnHelper } from "@tanstack/react-table";
-import { DateCell, MoneyCell, StatusCell } from "./cells";
-import type { Invoice } from "./types";
+import { MoneyCell, PnlCell, QuantityCell, StatusCell } from "./cells";
+import type { Position } from "./types";
 
-const column = createColumnHelper<Invoice>();
+const column = createColumnHelper<Position>();
 
-export const invoiceColumns = [
-  column.accessor("number", { header: "Invoice" }),
-  column.accessor("vendor", { header: "Vendor" }),
-  column.accessor("amountCents", {
-    header: "Amount",
-    // The value stays a number, so sorting later is numeric, not alphabetical.
+export const positionColumns = [
+  column.accessor("symbol", { header: "Symbol" }),
+  column.accessor("quantity", {
+    header: "Quantity",
+    // The value stays a signed number, so sorting later is numeric, not alphabetical.
+    cell: ({ getValue }) => <QuantityCell value={getValue()} />,
+  }),
+  column.accessor("priceCents", {
+    header: "Price",
     cell: ({ getValue, row }) => (
       <MoneyCell cents={getValue()} currency={row.original.currency} />
+    ),
+  }),
+  column.accessor("dayPnlCents", {
+    header: "Day P&L",
+    cell: ({ getValue, row }) => (
+      <PnlCell cents={getValue()} currency={row.original.currency} />
     ),
   }),
   column.accessor("status", {
     header: "Status",
     cell: ({ getValue }) => <StatusCell status={getValue()} />,
   }),
-  column.accessor("dueOn", {
-    header: "Due",
-    cell: ({ getValue }) => <DateCell value={getValue()} />,
-  }),
 ];
 ```
 
-> [!NUANCE]+
-> Define the columns array outside your component, like above.
-> If you build it inside, it is a new array on every render, and TanStack redraws every cell each time.
+> [!GOTCHA]
+> Here is a real bug that looks like a flaky button.
+> A page built its columns inside the component so a "Close" cell button could call a page handler.
+> Every render made a new columns array, TanStack rebuilt every cell, and React swapped the button out from under the user's mouse.
+> The click landed on a button that no longer existed, so nothing happened.
+> The fix: keep columns outside the component, and pass live handlers through the table's `meta` option, which cells can read when they draw.
 
-> [!NUANCE]-
-> `row.original` is your untouched `Invoice` object.
-> Use it when one cell needs two fields.
-> Keep the accessor pointed at the field you want to sort and filter by, which is why the amount column reads `amountCents` and not a formatted string.
+> [!NUANCE]
+>
+> - The same rule applies to data. `data={positions ?? []}` creates a new empty array every render. Use a constant empty array instead.
+> - `row.original` is your untouched `Position` object. Use it when one cell needs two fields, like `dayPnlCents` and `currency`.
+> - From here on, every table feature is the same recipe: turn on one "row model" option and add one piece of state.
+
+> [!INTERVIEW]-
+>
+> - _What does `getRowId` fix?_ Without it, TanStack names rows "0, 1, 2..." by position. Tick a row, sort the table, and a different position now looks ticked.
 
 > [!RECAP]
 >
@@ -439,35 +483,35 @@ Compare the two tabs: same result, very different amount of code to get wrong.
 
 > [!THINK]
 > In Step 1 you tracked loading and error yourself.
-> What else would you need to write to avoid fetching the same invoices twice when two components need them?
+> What else would you need to write to avoid fetching the same positions twice when two widgets need them?
 > What should the "key" of this request be, so the library knows it is the same request?
 
-```ts title="use-invoices.ts" group="load" tab="React Query"
+```ts title="use-positions.ts" group="load" tab="React Query"
 import { useQuery } from "@tanstack/react-query";
-import { fetchInvoices } from "./api";
+import { fetchPositions } from "./api";
 
-export const useInvoices = () =>
+export const usePositions = () =>
   useQuery({
-    queryKey: ["invoices"],
-    queryFn: fetchInvoices,
+    queryKey: ["positions"],
+    queryFn: fetchPositions,
     staleTime: 60_000, // treat data as fresh for a minute
   });
 ```
 
-```ts title="use-invoices.ts" group="load" tab="useEffect"
+```ts title="use-positions.ts" group="load" tab="useEffect"
 import { useEffect, useState } from "react";
-import { fetchInvoices } from "./api";
-import type { Invoice } from "./types";
+import { fetchPositions } from "./api";
+import type { Position } from "./types";
 
 // Everything React Query gives you, rebuilt by hand - and still no caching or retries.
-export const useInvoices = () => {
-  const [data, setData] = useState<Invoice[] | undefined>();
+export const usePositions = () => {
+  const [data, setData] = useState<Position[] | undefined>();
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    fetchInvoices()
+    fetchPositions()
       .then((rows) => !cancelled && setData(rows))
       .catch((e: Error) => !cancelled && setError(e));
 
@@ -504,30 +548,30 @@ Put the hand-written loop from Step 1 next to the TanStack version.
 > So what do you still write yourself?
 > Which function turns a header or a cell into JSX using the `cell` you defined in `columns.tsx`?
 
-```tsx title="invoice-table.tsx" group="draw" tab="TanStack Table"
+```tsx title="position-table.tsx" group="draw" tab="TanStack Table"
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { invoiceColumns } from "./columns";
-import { useInvoices } from "./use-invoices";
-import type { Invoice } from "./types";
+import { positionColumns } from "./columns";
+import { usePositions } from "./use-positions";
+import type { Position } from "./types";
 
-const EMPTY: Invoice[] = []; // a stable empty array while loading
+const EMPTY: Position[] = []; // a stable empty array while loading
 
-export const InvoiceTable = () => {
-  const { data, isPending, error } = useInvoices();
+export const PositionTable = () => {
+  const { data, isPending, error } = usePositions();
 
   const table = useReactTable({
     data: data ?? EMPTY,
-    columns: invoiceColumns,
+    columns: positionColumns,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row) => row.id,
   });
 
-  if (isPending) return <p>Loading invoices…</p>;
-  if (error) return <p role="alert">Could not load invoices.</p>;
+  if (isPending) return <p>Loading positions…</p>;
+  if (error) return <p role="alert">Could not load positions.</p>;
 
   return (
     <table>
@@ -548,7 +592,9 @@ export const InvoiceTable = () => {
       <tbody>
         {table.getRowModel().rows.length === 0 ? (
           <tr>
-            <td colSpan={invoiceColumns.length}>No invoices yet.</td>
+            <td colSpan={positionColumns.length}>
+              No positions match your filters.
+            </td>
           </tr>
         ) : (
           table.getRowModel().rows.map((row) => (
@@ -567,34 +613,34 @@ export const InvoiceTable = () => {
 };
 ```
 
-```tsx title="invoice-table.tsx" group="draw" tab="Plain map"
-import { invoiceColumns } from "./columns";
-import { useInvoices } from "./use-invoices";
+```tsx title="position-table.tsx" group="draw" tab="Plain map"
+import { positionColumns } from "./columns";
+import { usePositions } from "./use-positions";
 
 // Fine for an interview warm-up; you lose sorting, filtering and paging helpers.
-export const InvoiceTable = () => {
-  const { data, isPending, error } = useInvoices();
+export const PositionTable = () => {
+  const { data, isPending, error } = usePositions();
 
-  if (isPending) return <p>Loading invoices…</p>;
-  if (error || !data) return <p role="alert">Could not load invoices.</p>;
+  if (isPending) return <p>Loading positions…</p>;
+  if (error || !data) return <p role="alert">Could not load positions.</p>;
 
   return (
     <table>
       <thead>
         <tr>
-          {invoiceColumns.map((c) => (
+          {positionColumns.map((c) => (
             <th key={String(c.header)}>{String(c.header)}</th>
           ))}
         </tr>
       </thead>
       <tbody>
-        {data.map((invoice) => (
-          <tr key={invoice.id}>
-            <td>{invoice.number}</td>
-            <td>{invoice.vendor}</td>
-            <td>{invoice.amountCents / 100}</td>
-            <td>{invoice.status}</td>
-            <td>{invoice.dueOn}</td>
+        {data.map((position) => (
+          <tr key={position.id}>
+            <td>{position.symbol}</td>
+            <td>{position.quantity}</td>
+            <td>{position.priceCents / 100}</td>
+            <td>{position.dayPnlCents}</td>
+            <td>{position.status}</td>
           </tr>
         ))}
       </tbody>
@@ -604,11 +650,11 @@ export const InvoiceTable = () => {
 ```
 
 The TanStack version never names a field.
-Add a sixth column in `columns.tsx` and this file does not change at all.
+Add another column in `columns.tsx` and this file does not change at all.
 That is the whole point of the split.
 
 > [!WIN]-
-> You now have three small files with one job each: `use-invoices.ts` loads, `columns.tsx` describes, `invoice-table.tsx` draws.
+> You now have three small files with one job each: `use-positions.ts` loads, `columns.tsx` describes, `position-table.tsx` draws.
 > Part 2 adds sorting, filtering and paging, and only touches the table options and one hook.
 
 > [!RECAP]
@@ -631,10 +677,10 @@ npx shadcn@latest add table badge
 ```
 
 > [!THINK]
-> Which tags in `invoice-table.tsx` map to `Table`, `TableHeader`, `TableRow`, `TableHead` and `TableCell`?
-> Where should the colour of each status live now: in the table, or in `StatusCell`?
+> Which tags in `position-table.tsx` map to `Table`, `TableHeader`, `TableRow`, `TableHead` and `TableCell`?
+> Where should the colour of a status or a loss live now: in the table, or in the cell component?
 
-```tsx title="invoice-table.tsx"
+```tsx title="position-table.tsx"
 import {
   flexRender,
   getCoreRowModel,
@@ -648,21 +694,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { invoiceColumns } from "./columns";
-import { useInvoices } from "./use-invoices";
-import type { Invoice } from "./types";
+import { positionColumns } from "./columns";
+import { usePositions } from "./use-positions";
+import type { Position } from "./types";
 
-const EMPTY: Invoice[] = [];
+const EMPTY: Position[] = [];
 
-export const InvoiceTable = () => {
-  const { data, isPending, error } = useInvoices();
+export const PositionTable = () => {
+  const { data, isPending, error } = usePositions();
   const table = useReactTable({
     data: data ?? EMPTY,
-    columns: invoiceColumns,
+    columns: positionColumns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  if (error) return <p role="alert">Could not load invoices.</p>;
+  if (error) return <p role="alert">Could not load positions.</p>;
 
   return (
     <div className="rounded-md border">
@@ -684,8 +730,8 @@ export const InvoiceTable = () => {
         <TableBody>
           {isPending ? (
             <TableRow>
-              <TableCell colSpan={invoiceColumns.length}>
-                Loading invoices…
+              <TableCell colSpan={positionColumns.length}>
+                Loading positions…
               </TableCell>
             </TableRow>
           ) : (
@@ -712,37 +758,36 @@ The status colour belongs in the cell, so only `cells.tsx` changes.
 import { Badge } from "@/components/ui/badge";
 
 const STATUS_VARIANT: Record<
-  InvoiceStatus,
+  PositionStatus,
   "default" | "secondary" | "destructive" | "outline"
 > = {
-  draft: "outline",
-  open: "secondary",
-  paid: "default",
-  overdue: "destructive",
-  void: "outline",
+  open: "default",
+  closed: "outline",
 };
 
-export const StatusCell = ({ status }: { status: InvoiceStatus }) => (
+export const StatusCell = ({ status }: { status: PositionStatus }) => (
   <Badge variant={STATUS_VARIANT[status]}>{STATUS_LABEL[status]}</Badge>
 );
 ```
 
-> [!NUANCE]-
-> Keep the loading row inside the table instead of replacing the whole table.
-> The header stays put, so the page does not jump when the data arrives.
+> [!NUANCE]
+>
+> - A column's rendered width resolves as at least `minSize`, at most `maxSize`. If the whole table sets `defaultColumn: { minSize: 200 }`, a narrow column like Ccy needs its own `minSize` to shrink below that.
+> - A sticky header row (`position: sticky`) does not carry a background colour of its own. Colour each header cell instead of the row, or rows will look like they scroll up behind the header text.
+> - Keep the loading row inside the table instead of replacing the whole table. The header stays put, so the page does not jump when the data arrives.
 
 > [!RECAP]
 >
 > - shadcn components are copied into your project with `npx shadcn add`.
 > - Swap HTML tags for `Table*` pieces; TanStack logic does not change.
-> - Status colours live in `StatusCell`, so styling stays in one place.
+> - Column width and sticky headers are CSS details that live with the column or the cell, not the table's logic.
 
 ## Summary
 
 > [!SUMMARY]
 >
 > - A data table is data, columns and a loop that draws rows.
-> - Write the `Invoice` type first; store money as cents and dates as `YYYY-MM-DD`.
+> - Write the `Position` type first; store money as cents, keep quantity signed, and allow a `null` P&L.
 > - Always handle loading, error and empty, and key rows by `id`.
 > - `cells.tsx` draws one value; `columns.tsx` lists columns and picks cells.
 > - React Query loads and caches with one `useQuery` and a key.
@@ -753,47 +798,82 @@ Next, in [Part 2](#/docs/sort-filter-paginate), we add sorting, filtering and pa
 ```quiz
 [
   {
-    "q": "You store an invoice total as 1250.5 in a float and add many totals together. The finance team sees 0.01 differences. What change fixes the root cause?",
-    "options": ["Round each total with toFixed(2) before adding it to the running sum", "Store amounts as whole cents and divide by 100 only when drawing", "Run parseFloat on every value as it comes back from the API", "Format each value with Intl.NumberFormat first, then add them"],
+    "q": "A 'Close position' button inside a cell stops responding after any unrelated state in the parent updates. buildColumns({ onClose }) is called in the component body on every render. What is the most likely cause?",
+    "options": [
+      "A new columns array each render rebuilds and replaces the cell",
+      "onClose is a stale closure captured when the table first mounted",
+      "flexRender drops onClick handlers for buttons inside table cells",
+      "getRowId is missing, so TanStack cannot find the row to close"
+    ],
+    "answer": 0,
+    "expl": "TanStack tracks columns by object identity, so a fresh array each render forces a full rebuild and React drops the button the user was about to click. A stale closure would call the wrong handler rather than go silent, and flexRender renders whatever a cell returns without touching its event handlers."
+  },
+  {
+    "q": "You need a Close button inside a cell to call the current onClose handler without a new columns array forming on every render. Which setup gets you both?",
+    "options": [
+      "Wrap buildColumns in useMemo with an empty dependency array",
+      "Read the handler from table.options.meta at render time",
+      "Store the handler in a module-level mutable variable",
+      "Pass the handler down through each row's data object"
+    ],
     "answer": 1,
-    "expl": "Floats cannot store most decimals exactly, so errors pile up when adding. Whole cents are exact; divide only for display. Rounding or formatting first hides the error without removing it."
+    "expl": "Columns declared once outside the component keep a fixed identity, and meta gives every cell a place to read the current handler without rebuilding anything. A module-level variable is shared across every table instance and every request, which leaks one user's handler into another's table."
   },
   {
-    "q": "After you sort the table, clicking a row's checkbox ticks a different invoice. What is the likely cause?",
-    "options": ["The rows are keyed by array index", "The columns array is outside the component", "React Query cached the old data", "flexRender was not used for the header"],
-    "answer": 0,
-    "expl": "Sorting changes which invoice sits at index 0. With index keys, React reuses the old row's DOM and state for a different invoice. Key by the invoice id."
+    "q": "A trader ticks three rows, then sorts the table by Day P&L. Three different positions now show as ticked. What was missing?",
+    "options": [
+      "A controlled rowSelection state object",
+      "enableRowSelection set on the table options",
+      "getRowId returning each position's own id",
+      "A stable key on every table row element"
+    ],
+    "answer": 2,
+    "expl": "Without getRowId, TanStack names a row by its place in the array, so sorting hands the tick to whatever position now sits at index 0, 4 or 7. A React key controls how the DOM gets reused; it does not change what TanStack thinks a row's identity is."
   },
   {
-    "q": "A teammate adds a 'Category' column. In the TanStack version, which files should need to change?",
-    "options": ["columns.tsx only", "columns.tsx and invoice-table.tsx", "invoice-table.tsx only", "use-invoices.ts and columns.tsx"],
-    "answer": 0,
-    "expl": "The table file loops over whatever columns exist and never names a field. A new column is one new entry in columns.tsx, plus a cell only if it needs special drawing."
+    "q": "The Ccy column sets size: 60, but the whole table also sets defaultColumn: { minSize: 200 }, and the column still renders 200px wide. What actually fixes just this column?",
+    "options": [
+      "Set maxSize: 60 on the column instead of size",
+      "Lower the shared defaultColumn.minSize to 60",
+      "Add a fixed-width class to the column's cells",
+      "Set minSize: 60 on the Ccy column itself"
+    ],
+    "answer": 3,
+    "expl": "Width resolves as at least minSize and at most maxSize, so the shared default of 200 wins until the column sets its own minSize. Lowering the shared default would shrink every other narrow column at the same time, not just this one."
   },
   {
-    "q": "The Amount column shows '$1,250.50'. Which accessor setup keeps sorting correct later?",
-    "options": ["Accessor returns the formatted string", "Accessor reads amountCents, and the cell formats it", "Accessor reads currency, and the cell reads amountCents", "No accessor; the cell reads row.original only"],
-    "answer": 1,
-    "expl": "Sorting and filtering use the accessor's value. A number sorts numerically; a formatted string sorts like text, so '$9' lands after '$10'. The cell handles the looks."
-  },
-  {
-    "q": "Your table re-draws every cell on every keystroke in an unrelated search box on the page. Which change is the most likely fix?",
-    "options": ["Move the columns array out of the component", "Switch from React Query to useEffect", "Add a key to the table element", "Store the data in a ref"],
-    "answer": 0,
-    "expl": "Columns built inside the component are a new array each render, so TanStack treats every column as new and redraws all cells. Defining them once outside keeps the same object."
-  },
-  {
-    "q": "Which of these does React Query give you that the hand-written useEffect loader does not? Select all that apply.",
-    "options": ["Sharing one request between two components that ask for the same key", "Caching results so coming back to the page is instant", "Automatic retries on failure", "Formatting money in the cells"],
-    "answer": [0, 1, 2],
+    "q": "A blotter's header row uses position: sticky, but rows still appear to scroll up behind the header text. Which two changes actually fix it? Select all that apply.",
+    "options": [
+      "A max-height set on some unrelated parent wrapper",
+      "A background colour on each header th cell",
+      "A background colour on the sticky tr row itself",
+      "The scroll happening inside the table's own wrapper div"
+    ],
+    "answer": [1, 3],
     "multi": true,
-    "expl": "Deduplication, caching and retries come from the query key and the client. Formatting is the cell's job, not the loader's."
+    "expl": "A sticky row does not carry a background colour of its own, so each th needs one, or the row text underneath shows through. The scroll container also has to be the table's own wrapper - a max-height on some unrelated ancestor never makes the header stick in the first place."
   },
   {
-    "q": "In an interview, you have 10 minutes left and no libraries allowed. What should you make sure the plain table still does?",
-    "options": ["Show loading, error and empty states, and key rows by id", "Add virtualization so long lists of rows scroll smoothly", "Split the code into separate columns.tsx and cells.tsx files", "Swap the status text for a coloured shadcn Badge component"],
-    "answer": 0,
-    "expl": "States and stable keys are the correctness basics interviewers check first. File splits and styling are nice, and virtualization is not needed for a dozen rows."
+    "q": "The Day P&L column already colours losses red and gains green. Why does the cell still print an explicit + or - sign?",
+    "options": [
+      "Sorting would otherwise treat every value as positive",
+      "So the number still reads correctly without relying on colour",
+      "Intl.NumberFormat refuses to format a number with no sign",
+      "tabular-nums needs a leading character to line digits up"
+    ],
+    "answer": 1,
+    "expl": "Colour should never be the only signal - colour-blind readers, black-and-white printouts and screen readers all lose it, so the sign has to carry the meaning by itself. Sorting runs on the raw signed number from the accessor, not on the formatted string, so it never depended on the sign glyph anyway."
+  },
+  {
+    "q": "The 'No positions match' row spans a hardcoded colSpan={5}. A trader then hides the Status column. What happens?",
+    "options": [
+      "TanStack recalculates the colSpan automatically",
+      "The hidden column reappears to fill the leftover space",
+      "Nothing, hidden columns still count toward the span",
+      "The empty message overflows past the visible header"
+    ],
+    "answer": 3,
+    "expl": "A hardcoded colSpan no longer matches four visible columns once one is hidden, so the cell stretches past where the header actually ends. Spanning table.getVisibleLeafColumns().length instead keeps it correct no matter which columns are shown."
   }
 ]
 ```
@@ -806,7 +886,7 @@ Next, in [Part 2](#/docs/sort-filter-paginate), we add sorting, filtering and pa
     "source": "GreatFrontEnd",
     "kind": "practice",
     "difficulty": "Medium",
-    "note": "Build a user table with pages in React - the interview version of Step 1."
+    "note": "Build a table with pages in plain React - the interview version of Step 1."
   },
   {
     "title": "Column definitions guide",
@@ -828,6 +908,13 @@ Next, in [Part 2](#/docs/sort-filter-paginate), we add sorting, filtering and pa
     "source": "shadcn/ui",
     "kind": "read",
     "note": "The official shadcn guide that pairs its Table with TanStack Table."
+  },
+  {
+    "title": "Intl.NumberFormat",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat",
+    "source": "MDN",
+    "kind": "read",
+    "note": "The signDisplay and currency options QuantityCell and MoneyCell lean on."
   }
 ]
 ```

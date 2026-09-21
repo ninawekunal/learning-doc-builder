@@ -18,6 +18,29 @@ minutes: 8
 
 [Part 7](#/docs/cell-design-grouping) covered when two fields share one cell and why sorting ignores what you draw.
 
+## The big picture
+
+> [!TLDR]
+> Four small cell rules, applied once in shared components instead of copied into every page: a fixed money format, a shared empty marker, one flag per column, and a two-line limit.
+
+Table: each row is a rule this doc sets, and what breaks on the page without it.
+
+| Rule                             | What breaks without it                               |
+| -------------------------------- | ---------------------------------------------------- |
+| One `MoneyCell` for every amount | Two pages round or align digits differently          |
+| One shared "no value" marker     | Some pages show 0.00, others a blank cell            |
+| Columns declare `meta` flags     | Every columns file re-implements the same formatting |
+| Two-line limit per cell          | Rows grow to different heights depending on the data |
+
+> [!ANALOGY]
+> A shared cell component is a stencil.
+> Every page traces the same stencil, so the shape never drifts from page to page.
+
+> [!RECAP]
+>
+> - Four small rules, applied once, instead of copied into every page.
+> - The next four sections cover money, profit and empty cells, meta flags, then copying and row height.
+
 ## Money must look the same everywhere
 
 > [!TLDR]
@@ -196,11 +219,11 @@ export const marketValueColumn: ColumnDef<PositionRow> = {
     "q": "A column already converted to USD suddenly shows 'EUR' on European rows. getCurrency returns null for it. What bug is likely?",
     "options": [
       "The row currency was mapped incorrectly",
-      "The meta flag was not typed by augmentation",
       "null and undefined shared one falsy check",
+      "The meta flag was not typed by augmentation",
       "The CSV route overwrote the currency meta"
     ],
-    "answer": 2,
+    "answer": 1,
     "expl": "null means 'deliberately no code'; undefined means 'use the row currency'. A falsy check sends null down the row-currency path."
   },
   {

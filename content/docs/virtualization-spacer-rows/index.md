@@ -22,12 +22,28 @@ minutes: 11
 
 [Part 13](#/docs/virtualization-measure-first) showed how to measure a slow table and why paging or a Show more cap usually wins; this part is for the case where neither is enough.
 
+## The big picture
+
 > [!TLDR]
 > Mount only the rows in view, stand in for the rest with two spacer rows, and keep everything the rows need in the parent.
 
 > [!ANALOGY]
 > Virtualization is a train window.
 > The landscape is miles long, but you only ever see one window's worth, and the scenery outside it does not need to exist until you reach it.
+
+Table: each row is a piece this doc adds, and the problem it solves.
+
+| Piece                            | Problem it solves                                        |
+| -------------------------------- | -------------------------------------------------------- |
+| Two spacer rows                  | The table keeps its real height and scrollbar            |
+| Scroll box held in state         | The virtualizer's own effect can run before a ref is set |
+| Measured row heights             | Rows are not all the same height                         |
+| Memoized rows, tested with shims | Re-renders and jsdom both need real fixes                |
+
+> [!RECAP]
+>
+> - Spacer rows, state instead of a ref, measured heights, and memoized rows are four separate fixes for four separate problems.
+> - Each of the next four sections covers one.
 
 ## Two spacer rows
 
